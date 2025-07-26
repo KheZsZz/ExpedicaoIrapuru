@@ -1,13 +1,13 @@
-# import pandas as pd
-# import streamlit as st 
+import pandas as pd
+import streamlit as st 
 # import re
 # import httpx
 # import asyncio
 # import time
 
-# from database import conhecimentos
+from database import conhecimentos
 
-# df = conhecimentos()
+df = conhecimentos()
 
 # # Função para limpar o CNPJ
 # def limpar_cnpj(cnpj):
@@ -40,9 +40,9 @@
 #     except httpx.RequestError as e:
 #         return f"Erro de rede: {e}"
 
-# st.set_page_config(page_title="Conhecimentos", page_icon="💵")
-# st.set_page_config(layout="wide")
-# st.title("CT-e")    
+st.set_page_config(page_title="Conhecimentos", page_icon="💵")
+st.set_page_config(layout="wide")
+st.title("CT-e")    
 
 # with st.container(border=True, key="consulta"):
 #     col1, col2 = st.columns([5,1], vertical_alignment="bottom", gap="large")
