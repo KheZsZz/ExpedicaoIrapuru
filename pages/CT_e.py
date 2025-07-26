@@ -64,7 +64,7 @@ if not filtro.empty:
             st.success(f"{asyncio.run(consultar_razao_social(row['DESTINATARIO']))} X {asyncio.run(consultar_razao_social(row['REMETENTE']))}")
             
             with st.container(border=True):
-                st.image(f"./public/image/{row["UNIDADE"]}.svg", caption="Unidade")
+                st.image(f"./public/image/{row['UNIDADE']}.svg", caption="Unidade")
                 col1, col2 = st.columns([1,3], vertical_alignment="top", gap="small")
                 with col1:
                     st.markdown("**Frete conta:**")
@@ -88,7 +88,7 @@ if not filtro.empty:
             for linha in linhas:
                 col1.markdown(f'{linha}')
 
-            col2.markdown(f">Obs: {row["OBSERVAÇOES FINANCEIRAS"]}")
+            col2.markdown(f">Obs: {row['OBSERVAÇOES FINANCEIRAS']}")
             
 
 else :
