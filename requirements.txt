@@ -4,5 +4,4 @@ streamlit
 openpyxl
 asyncio
 httpx
-# re
 plotly.express
