@@ -2,8 +2,8 @@ reportlab
 pandas
 streamlit
 openpyxl
-xlsxwriter
-asyncio
-httpx
-re
-plotly.express
+# xlsxwriter
+# asyncio
+# httpx
+# re
+# plotly.express
