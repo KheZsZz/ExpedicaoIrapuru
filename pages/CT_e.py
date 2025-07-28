@@ -38,7 +38,7 @@ async def consultar_razao_social(cnpj):
         return f"Erro de rede: {e}"
 
 
-def dashboard():
+def conhecimentos():
     df = conhecimentos()
 
     st.set_page_config(page_title="Conhecimentos", page_icon="💵")
@@ -96,4 +96,4 @@ def dashboard():
         st.warning("dados não encontrado...")
     # st.dataframe(df["DESTINATARIO"])
 
-dashboard()
+conhecimentos()
