@@ -6,4 +6,4 @@ openpyxl
 asyncio
 httpx
 re
-# plotly.express
+plotly.express
