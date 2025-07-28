@@ -82,4 +82,5 @@ def dashboard():
     else:
         st.write("Em construção...")
 
-dashboard()
+if __name__ == "__main__":
+    dashboard()

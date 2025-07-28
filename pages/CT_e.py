@@ -96,4 +96,6 @@ def cte():
         st.warning("dados não encontrado...")
     # st.dataframe(df["DESTINATARIO"])
 
-cte()
+
+if __name__ == "__main__":
+    cte()
