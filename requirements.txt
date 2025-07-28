@@ -5,5 +5,5 @@ openpyxl
 # xlsxwriter
 asyncio
 httpx
-# re
+re
 # plotly.express
