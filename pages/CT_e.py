@@ -65,7 +65,7 @@ def cte():
                 st.success(f"{asyncio.run(consultar_razao_social(row['DESTINATARIO']))} X {asyncio.run(consultar_razao_social(row['REMETENTE']))}")
                 
                 with st.container(border=True):
-                    st.image(image=f"./image/{row['UNIDADE']}.svg", caption="Unidade", clamp=True)
+                    st.image(image=f"./image/{row['UNIDADE'].unique()}.svg", caption="Unidade", clamp=True)
                     col1, col2 = st.columns([1,3], vertical_alignment="top", gap="small")
 
                     with col1:
