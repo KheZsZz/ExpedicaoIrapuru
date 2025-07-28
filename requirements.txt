@@ -3,7 +3,7 @@ pandas
 streamlit
 openpyxl
 # xlsxwriter
-# asyncio
-# httpx
+asyncio
+httpx
 # re
 # plotly.express
