@@ -3,8 +3,6 @@ import pandas as pd
 import streamlit as st 
 import httpx
 import asyncio
-# import time
-
 from database import conhecimentos
 
 # Função para limpar o CNPJ
@@ -67,11 +65,11 @@ def cte():
     if not filtro.empty:
         with st.spinner("Consultando..."):
             for index, row in filtro.iterrows():
-                # st.success(f"{asyncio.run(consultar_razao_social(row['DESTINATARIO']))} X {asyncio.run(consultar_razao_social(row['REMETENTE']))}")
+
                 razoes_sociais = asyncio.run(consultar_varios_cnpjs([row["DESTINATARIO"], row["REMETENTE"]]))   
                 st.success(f"{razoes_sociais[0]} X {razoes_sociais[1]}")
+
                 with st.container(border=True):
-                    # row['UNIDADE'] = row["UNIDADE"].astype(str)
                     st.image(image=f"./image/{str(row['UNIDADE'])}.svg", caption="Unidade", clamp=True)
                     col1, col2 = st.columns([1,3], vertical_alignment="top", gap="small")
 
@@ -93,15 +91,13 @@ def cte():
 
                 col1.markdown("## Passo a passo:")
                 linhas = row["PASSO A PSSO DE EMISSÃO"].split(";") 
+
                 for linha in linhas:
                     col1.markdown(f'{linha}')
 
                 col2.markdown(f">Obs: {row['OBSERVAÇOES FINANCEIRAS']}")
-                
-
     else :
         st.warning("dados não encontrado...")
-    # st.dataframe(df["DESTINATARIO"])
 
 
 if __name__ == "__main__":

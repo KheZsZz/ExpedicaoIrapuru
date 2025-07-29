@@ -7,8 +7,8 @@ dataframe = conectData()
 
 # # Main page 
 def dashboard():
-    st.set_page_config(page_title="Dashboard", page_icon="📈")
-    st.set_page_config(layout="wide")
+    st.set_page_config(page_title="Dashboard", page_icon="📈", layout="wide")
+    
     st.title("Dashboard")
 
 
@@ -16,7 +16,8 @@ def dashboard():
     st.sidebar.title("Filtros")
     setor = st.sidebar.selectbox('Setore', ('Expedição', 'Recebimento'))
     data = st.sidebar.date_input( label="Data", format="DD/MM/YYYY", value="today" )
-    turno = st.sidebar.selectbox('Turnos', dataframe["Turno"].unique())
+    turno = st.sidebar.selectbox('Turnos', ["todos os turnos", *sorted(dataframe["Turno"].dropna().unique())])
+
 
     if setor == "Expedição":
         # itens necessários: Qtd total de Ctes emitidos, ranking Top 3 integrantes, top 1 turno, top 5 dias com mais Ctes emitidos
@@ -63,7 +64,10 @@ def dashboard():
 
         # Grafico   
         data = pd.to_datetime(data)
-        df_filtrado = dataframe[(dataframe["Data"] == data) & (dataframe["Turno"] == turno)]
+        if turno == "todos os turnos":
+            df_filtrado = dataframe[dataframe["Data"] == data]
+        else:
+            df_filtrado = dataframe[(dataframe["Data"] == data) & (dataframe["Turno"] == turno)]
 
         if df_filtrado.empty:
             st.warning("Nenhum dado encontrado para a data e turno selecionados.")
@@ -80,6 +84,7 @@ def dashboard():
 
             st.plotly_chart(fig)
     else:
+        # Recebimento
         st.write("Em construção...")
 
 if __name__ == "__main__":
