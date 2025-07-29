@@ -37,6 +37,10 @@ async def consultar_razao_social(cnpj):
     except httpx.RequestError as e:
         return f"Erro de rede: {e}"
 
+# Função para rodar várias consultas assíncronas
+async def consultar_varios_cnpjs(cnpjs):
+    tarefas = [consultar_razao_social(cnpj) for cnpj in cnpjs]
+    return await asyncio.gather(*tarefas)
 
 def cte():
     df = conhecimentos()
@@ -58,14 +62,16 @@ def cte():
                         st.error("CNPJ não encontrado!")
 
     filtro = df[(df["REMETENTE"] == limpar_cnpj(cnpj_input)) | (df["DESTINATARIO"] == limpar_cnpj(cnpj_input))]
+    razoes_sociais = asyncio.run(consultar_varios_cnpjs([row["DESTINATARIO"], row["REMETENTE"]]))   
 
     if not filtro.empty:
         with st.spinner("Consultando..."):
             for index, row in filtro.iterrows():
-                st.success(f"{asyncio.run(consultar_razao_social(row['DESTINATARIO']))} X {asyncio.run(consultar_razao_social(row['REMETENTE']))}")
-                
+                # st.success(f"{asyncio.run(consultar_razao_social(row['DESTINATARIO']))} X {asyncio.run(consultar_razao_social(row['REMETENTE']))}")
+                st.success(f"{razoes_sociais[0]} X {razoes_sociais[1]}")
                 with st.container(border=True):
-                    st.image(image=f"./image/{row['UNIDADE']}.svg", caption="Unidade", clamp=True)
+                    # row['UNIDADE'] = row["UNIDADE"].astype(str)
+                    st.image(image=f"./image/{str(row['UNIDADE'])}.svg", caption="Unidade", clamp=True)
                     col1, col2 = st.columns([1,3], vertical_alignment="top", gap="small")
 
                     with col1:
