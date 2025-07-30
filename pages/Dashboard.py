@@ -64,7 +64,7 @@ def dashboard():
 
         # Grafico   
         data = pd.to_datetime(data)
-        if turno == "todos os turnos":
+        if turno == "Todos os turnos":
             df_filtrado = dataframe[dataframe["Data"] == data]
         else:
             df_filtrado = dataframe[(dataframe["Data"] == data) & (dataframe["Turno"] == turno)]
