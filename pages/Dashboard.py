@@ -16,7 +16,7 @@ def dashboard():
     st.sidebar.title("Filtros")
     setor = st.sidebar.selectbox('Setore', ('Expedição', 'Recebimento'))
     data = st.sidebar.date_input( label="Data", format="DD/MM/YYYY", value="today" )
-    turno = st.sidebar.selectbox('Turnos', ["todos os turnos", *sorted(dataframe["Turno"].dropna().unique())])
+    turno = st.sidebar.selectbox('Turnos', ["Todos os turnos", *sorted(dataframe["Turno"].dropna().unique())])
 
 
     if setor == "Expedição":
