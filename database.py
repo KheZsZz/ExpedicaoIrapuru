@@ -24,3 +24,15 @@ def conhecimentos ():
     df = df.astype(str)
 
     return df
+
+def ocorrencias():
+    df = pd.read_csv(
+        "https://docs.google.com/spreadsheets/d/1d6dnzakl3ZXuQTyMzRAjugcL9g0mmw8r985PJj-IKA0/export?format=csv&gid=0",
+    )
+    
+
+    df["Data"] = pd.to_datetime(df["Data"], errors="coerce")
+    df["Turno"] = df["Turno"].astype(str).str.strip()
+
+    # df = df.astype(str)
+    return df
