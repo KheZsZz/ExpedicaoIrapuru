@@ -54,4 +54,4 @@ def painel_ocorrencia():
     st.markdown("### 🔢 Registros Filtrados")
     st.dataframe(df_filtrado, use_container_width=True, hide_index=True, selection_mode="multi-row")
 
-painel_ocorrencia()
+painel_ocorrencia() 
