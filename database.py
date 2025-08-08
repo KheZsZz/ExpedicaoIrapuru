@@ -30,7 +30,9 @@ def ocorrencias():
         "https://docs.google.com/spreadsheets/d/1d6dnzakl3ZXuQTyMzRAjugcL9g0mmw8r985PJj-IKA0/export?format=csv&gid=0",
     )
     
-    df["Data"] = pd.to_datetime(df["Data"], errors="coerce")
+    df['Data'] = pd.to_datetime(df['Data'], errors='coerce')  # Garante que a coluna seja datetime
+    df['Data'] = df['Data'].dt.strftime('%d/%m/%Y')
+    
     df["Turno"] = df["Turno"].astype(str).str.strip()
 
     # df = df.astype(str)
