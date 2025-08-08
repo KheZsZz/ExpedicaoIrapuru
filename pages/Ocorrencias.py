@@ -12,6 +12,9 @@ def painel_ocorrencia():
     # Filtros na barra lateral
     with st.sidebar:
         st.header("🔍 Filtros")
+        
+        df["Data"] = pd.to_datetime(df["Data"], errors="coerce")  # Converte e força erro em valores inválidos
+
         data_range = st.date_input("Período", [df["Data"].min(), df["Data"].max()])
         turno_sel = st.selectbox("Turno", ["Todos"] + sorted(df["Turno"].dropna().unique()))
         erro_sel = st.selectbox("Tipo de Erro", ["Todos"] + sorted(df["Tipo de Erro"].dropna().unique())) 
