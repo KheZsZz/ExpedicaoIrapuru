@@ -28,7 +28,7 @@ def painel_ocorrencia():
     # Métricas principais
     col1, col2, col3 = st.columns(3)
     col1.metric("Total de Erros", len(df_filtrado))
-    col2.metric("Erros Resolvidos", df_filtrado[df_filtrado["Status"].str.lower().str.contains("resolvido")].shape[0])
+    col2.metric("Erros Resolvidos", df_filtrado[df_filtrado["Status"].str.lower().str.contains("Resolvido")].shape[0])
     col3.metric("Clientes Afetados", df_filtrado["Cliente"].nunique())
 
     st.markdown("---")
