@@ -26,7 +26,7 @@ def painel_ocorrencia():
         df_filtrado = df_filtrado[df_filtrado["Tipo de Erro"] == erro_sel]
 
     # Métricas principais
-    st.dataframe(df_filtrado)
+    # st.dataframe(df_filtrado)
     col1, col2, col3 = st.columns(3)
     col1.metric("Total de Erros", len(df_filtrado))
     col2.metric("Erros Resolvidos", df_filtrado[df_filtrado["Status"].str.lower().str.contains("Resolvido")].shape[0])
