@@ -77,20 +77,19 @@ def Cargas():
 
     if not rota or "routes" not in rota:
         st.error("Não foi possível obter a rota.")
-        return
+    else:
+        # Decodificar geometria para coordenadas (lat, lon)
+        geometry = rota["routes"][0]["geometry"]
+        coords = convert.decode_polyline(geometry)["coordinates"]
+        coords = [(lat, lon) for lon, lat in coords]  # Inverter ordem
 
-    # Decodificar geometria para coordenadas (lat, lon)
-    geometry = rota["routes"][0]["geometry"]
-    coords = convert.decode_polyline(geometry)["coordinates"]
-    coords = [(lat, lon) for lon, lat in coords]  # Inverter ordem
+        # Criar mapa
+        mapa = folium.Map(location=coords[0], zoom_start=10)
+        folium.PolyLine(coords, color="blue", weight=5).add_to(mapa)
+        folium.Marker(coords[0], tooltip="Origem").add_to(mapa)
+        folium.Marker(coords[-1], tooltip="Destino").add_to(mapa)
 
-    # Criar mapa
-    mapa = folium.Map(location=coords[0], zoom_start=10)
-    folium.PolyLine(coords, color="blue", weight=5).add_to(mapa)
-    folium.Marker(coords[0], tooltip="Origem").add_to(mapa)
-    folium.Marker(coords[-1], tooltip="Destino").add_to(mapa)
-
-    # Mostrar mapa
-    st_folium(mapa, center=True, use_container_width=True, height=500)
+        # Mostrar mapa
+        st_folium(mapa, center=True, use_container_width=True, height=500)
 
 Cargas()
