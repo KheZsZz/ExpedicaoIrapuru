@@ -5,3 +5,6 @@ openpyxl
 asyncio
 httpx
 plotly.express
+folium 
+streamlit_folium
+openrouteservice
