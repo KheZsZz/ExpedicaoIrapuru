@@ -24,6 +24,14 @@ def dashboard():
     # Sidebar
     with st.sidebar:
         st.subheader("🔍 Filtros")
+        # Botão de reset
+        if st.button("🔄 Resetar filtros"):
+            st.session_state["setor"] = setor_default
+            st.session_state["data"] = data_default
+            st.session_state["colaborador"] = colaborador_default
+            st.session_state["turno"] = turno_default
+            st.session_state["erro"] = erro_default
+            st.rerun()
 
         setor = st.selectbox('Setor', ('Expedição', 'Recebimento'), key="setor")
         data = st.date_input("Período", data_default, key="data")
@@ -43,14 +51,7 @@ def dashboard():
             key="erro"
         )
 
-        # Botão de reset
-        if st.button("🔄 Resetar filtros"):
-            st.session_state["setor"] = setor_default
-            st.session_state["data"] = data_default
-            st.session_state["colaborador"] = colaborador_default
-            st.session_state["turno"] = turno_default
-            st.session_state["erro"] = erro_default
-            st.rerun()
+        
 
     # Garantir que data seja intervalo
     if isinstance(data, list) or isinstance(data, tuple):
