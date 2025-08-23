@@ -18,9 +18,25 @@ def dashboard():
     with st.sidebar:
         setor = st.selectbox('Setor', ('Expedição', 'Recebimento'))
         data = st.date_input("Período", [df["Data"].min(), df["Data"].max()])
-        colaborador = st.selectbox('Colaborador',["Todos"] + sorted(df["Responsável"].dropna().unique()))
-        turno = st.selectbox('Turnos', ["Todos os turnos", *sorted(df["Turno"].dropna().unique())])
-        erro_sel = st.selectbox("Tipo de Erro", ["Todos"] + sorted(df_ocorrencias["Tipo de Erro"].dropna().unique())) 
+
+        # Colaborador com key dinâmico
+        colaborador = st.selectbox(
+            'Colaborador',
+            ["Todos"] + sorted(df["Responsável"].dropna().unique()),
+            key=f"colab_{setor}"
+        )
+
+        turno = st.selectbox(
+            'Turnos',
+            ["Todos os turnos", *sorted(df["Turno"].dropna().unique())],
+            key=f"turno_{setor}"
+        )
+
+        erro_sel = st.selectbox(
+            "Tipo de Erro",
+            ["Todos"] + sorted(df_ocorrencias["Tipo de Erro"].dropna().unique()),
+            key=f"erro_{setor}"
+        ) 
 
     # Garantir que data seja intervalo
     if isinstance(data, list) or isinstance(data, tuple):
@@ -46,12 +62,14 @@ def dashboard():
             st.warning("Nenhum dado encontrado para os filtros selecionados.")
         else:
             # Métricas
-            col1, col2, col3 = st.columns([3,1,3],vertical_alignment="center", gap="medium")
+            col1, col2, col3 = st.columns([3,1,3], vertical_alignment="center", gap="medium")
             with col2:
+                cte_total = int(df_filtrado["Quantidade de CTe"].sum())
+                cte_hoje = df_filtrado[df_filtrado["Data"].dt.date == data_inicio.date()]["Quantidade de CTe"].sum()
                 st.metric(
                     label="CTEs emitidos",
-                    value=df_filtrado["Quantidade de CTe"].sum(),
-                    delta=int(df_filtrado[df_filtrado["Data"].dt.date == data_inicio.date()]["Quantidade de CTe"].sum())
+                    value=cte_total,
+                    delta=int(cte_hoje) if not pd.isna(cte_hoje) else 0
                 )
             with col3:
                 st.caption("🔝 Top 3 responsáveis por CTe emitido")
@@ -93,14 +111,16 @@ def dashboard():
 
             col1, col2, col3 = st.columns(3)
             col1.metric("Total de Erros", len(df_filtrado_ocorrencias))
-            col2.metric("Erros Resolvidos", df_filtrado_ocorrencias[df_filtrado_ocorrencias["Status"].str.lower().str.contains("resolvido")].shape[0])
+            col2.metric(
+                "Erros Resolvidos",
+                df_filtrado_ocorrencias[df_filtrado_ocorrencias["Status"].str.lower().str.contains("resolvido")].shape[0]
+            )
 
             coluna_cliente = "Cliente (CNPJ)" if "Cliente (CNPJ)" in df_filtrado_ocorrencias.columns else "Cliente"
             col3.metric("Clientes Afetados", df_filtrado_ocorrencias[coluna_cliente].nunique())
 
             st.markdown("---")
 
-            # Gráfico de Erros por Tipo
             if not df_filtrado_ocorrencias.empty:
                 df_tipo_erro = df_filtrado_ocorrencias["Tipo de Erro"].value_counts().reset_index()
                 df_tipo_erro.columns = ["Tipo de Erro", "Qtde"]
@@ -108,16 +128,13 @@ def dashboard():
                 fig_tipo = px.funnel(df_tipo_erro, y="Tipo de Erro", x="Qtde", title="Erros por Tipo")
                 st.plotly_chart(fig_tipo, use_container_width=True)
 
-                # Gráfico de Erros por Turno
                 fig_turno = px.pie(df_filtrado_ocorrencias, names="Turno", title="Distribuição de Erros por Turno")
                 st.plotly_chart(fig_turno, use_container_width=True)
 
-                # Evolução temporal dos erros
                 erros_dia = df_filtrado_ocorrencias.groupby(df_filtrado_ocorrencias["Data"].dt.date).size().reset_index(name="Erros")
                 fig_evolucao = px.line(erros_dia, x="Data", y="Erros", title="Evolução Diária de Erros")
                 st.plotly_chart(fig_evolucao, use_container_width=True)
 
-            # Tabela final
             st.markdown("### 🔢 Registros Filtrados")
             st.dataframe(df_filtrado_ocorrencias, use_container_width=True, hide_index=True)
 
