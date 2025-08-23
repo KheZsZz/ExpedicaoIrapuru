@@ -18,7 +18,7 @@ def dashboard():
     with st.sidebar:
         setor = st.selectbox('Setor', ('Expedição', 'Recebimento'))
         data = st.date_input("Período", [df["Data"].min(), df["Data"].max()])
-        colaborador = st.selectbox('Colaborador', ["Todos"] + sorted(df["Responsável"].dropna().unique()))
+        colaborador = st.selectbox('Colaborador',["Todos"] + sorted(df["Responsável"].dropna().unique()))
         turno = st.selectbox('Turnos', ["Todos os turnos", *sorted(df["Turno"].dropna().unique())])
         erro_sel = st.selectbox("Tipo de Erro", ["Todos"] + sorted(df_ocorrencias["Tipo de Erro"].dropna().unique())) 
 
