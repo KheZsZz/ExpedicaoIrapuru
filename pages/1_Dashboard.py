@@ -14,29 +14,43 @@ df_ocorrencias["Data"] = pd.to_datetime(df_ocorrencias["Data"], errors="coerce")
 def dashboard():
     st.title("📊 Dashboard")
 
+    # Valores default dos filtros
+    data_default = [df["Data"].min(), df["Data"].max()]
+    colaborador_default = "Todos"
+    turno_default = "Todos os turnos"
+    erro_default = "Todos"
+    setor_default = "Expedição"
+
     # Sidebar
     with st.sidebar:
-        setor = st.selectbox('Setor', ('Expedição', 'Recebimento'))
-        data = st.date_input("Período", [df["Data"].min(), df["Data"].max()])
+        st.subheader("🔍 Filtros")
 
-        # Colaborador com key dinâmico
+        setor = st.selectbox('Setor', ('Expedição', 'Recebimento'), key="setor")
+        data = st.date_input("Período", data_default, key="data")
         colaborador = st.selectbox(
             'Colaborador',
             ["Todos"] + sorted(df["Responsável"].dropna().unique()),
-            key=f"colab_{setor}"
+            key="colaborador"
         )
-
         turno = st.selectbox(
             'Turnos',
             ["Todos os turnos", *sorted(df["Turno"].dropna().unique())],
-            key=f"turno_{setor}"
+            key="turno"
         )
-
         erro_sel = st.selectbox(
             "Tipo de Erro",
             ["Todos"] + sorted(df_ocorrencias["Tipo de Erro"].dropna().unique()),
-            key=f"erro_{setor}"
-        ) 
+            key="erro"
+        )
+
+        # Botão de reset
+        if st.button("🔄 Resetar filtros"):
+            st.session_state["setor"] = setor_default
+            st.session_state["data"] = data_default
+            st.session_state["colaborador"] = colaborador_default
+            st.session_state["turno"] = turno_default
+            st.session_state["erro"] = erro_default
+            st.rerun()
 
     # Garantir que data seja intervalo
     if isinstance(data, list) or isinstance(data, tuple):
