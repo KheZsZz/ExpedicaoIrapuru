@@ -34,7 +34,7 @@ def dashboard():
             st.rerun()
 
         setor = st.selectbox('Setor', ('Expedição', 'Recebimento'), key="setor")
-        data = st.date_input("Período", data_default, key="data")
+        data = st.date_input("Período", data_default, key="date")
         colaborador = st.selectbox(
             'Colaborador',
             ["Todos"] + sorted(df["Responsável"].dropna().unique()),
