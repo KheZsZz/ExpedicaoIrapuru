@@ -13,32 +13,40 @@ import pandas as pd
 @st.cache_data
 def load_pedagios():
     # Carrega Excel e padroniza nomes de colunas
-    df = pd.read_excel("database/pracas.xlsx")
-    df.columns = df.columns.str.strip().str.lower()  # remove espaços e coloca minúsculas
+    df = pd.read_excel("database/pracas.xlsx")  
+    df.columns = (
+        df.columns.str.strip()
+        .str.lower()
+        .str.replace(" ", "_")  # transforma "Valor Leve" em "valor_leve"
+    )
+    # Remove linhas sem coordenadas
+    df = df.dropna(subset=["lat", "lon"])
+    df["lat"] = df["lat"].astype(float)
+    df["lon"] = df["lon"].astype(float)
     return df
 
 def calcular_pedagios(coords):
     df = load_pedagios()
     pedagios_rota = []
     total_valor = 0
-    for _, row in df.iterrows():
-        try:
-            pedagio_coord = (float(row["lat"]), float(row["lon"]))
-        except:
-            continue  # ignora linhas com lat/lon inválidos
-        for ponto in coords:
-            distancia = geodesic(ponto, pedagio_coord).km
-            if distancia < 5:
-                valor = float(row.get("valor_leve", 0))
-                pedagios_rota.append({
-                    "nome": row["praca"],
-                    "rodovia": row["rodovia"],
-                    "valor": valor,
-                    "lat": pedagio_coord[0],
-                    "lon": pedagio_coord[1]
-                })
-                total_valor += valor
-                break  # já encontrou este pedágio, passa para o próximo
+
+    # Adiciona coluna de tupla de coordenadas
+    df["coords"] = list(zip(df["lat"], df["lon"]))
+
+    for ponto in coords:
+        # Filtra pedágios próximos (<5 km)
+        proximos = df[df["coords"].apply(lambda c: geodesic(c, ponto).km < 5)]
+        for _, row in proximos.iterrows():
+            valor = float(row.get("valor_leve", 0))
+            pedagios_rota.append({
+                "nome": row["praca"],
+                "rodovia": row.get("rodovia", ""),
+                "valor": valor,
+                "lat": row["lat"],
+                "lon": row["lon"]
+            })
+            total_valor += valor
+
     return pedagios_rota, total_valor
 
 def get_coords(endereco):
@@ -59,7 +67,7 @@ def fetch_api(remetente, destinatario):
     if not coord_origem or not coord_destino:
         return None
 
-    ORS_API_KEY = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6Ijc4NDkzZWRjZThhMTQ4NjZiMGUwNzMxNTA5MzI3Zjk3IiwiaCI6Im11cm11cjY0In0="
+    ORS_API_KEY = "SUA_CHAVE_ORS_AQUI"
     url = "https://api.openrouteservice.org/v2/directions/driving-car"
     headers = {"Authorization": ORS_API_KEY}
     body = {
@@ -68,10 +76,11 @@ def fetch_api(remetente, destinatario):
             [coord_destino[1], coord_destino[0]]
         ]
     }
-    try:
-        return requests.post(url, json=body, headers=headers).json()
-    except:
+    resp = requests.post(url, json=body, headers=headers)
+    if resp.status_code != 200:
+        st.error(f"Erro ORS API: {resp.status_code}")
         return None
+    return resp.json()
 
 # ---------------------------
 # App Streamlit
