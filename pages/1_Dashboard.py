@@ -1,15 +1,17 @@
 import pandas as pd
 import streamlit as st 
 import plotly.express as px
-from database import conectData, ocorrencias
+from database import conectData, ocorrencias, desacordos
 
 st.set_page_config(page_title="Dashboard", page_icon="📈", layout="wide")
 
 df = conectData()
 df_ocorrencias = ocorrencias()
+df_desacordos = desacordos()
 
 df["Data"] = pd.to_datetime(df["Data"], errors="coerce")
 df_ocorrencias["Data"] = pd.to_datetime(df_ocorrencias["Data"], errors="coerce")
+df_desacordos["Data"] = pd.to_datetime(df_desacordos["Data"], errors="coerce")
 
 def dashboard():
     st.title("📊 Dashboard")
@@ -42,8 +44,8 @@ def dashboard():
         )
         turno = st.selectbox(
             'Turnos',
-            ["Todos os turnos", *sorted(df["Turno"].dropna().unique())],
-            key="turno"
+            ["Todos os turnos", *sorted(df_ocorrencias["Turno"].dropna().unique())],
+            key="turnos"
         )
         erro_sel = st.selectbox(
             "Tipo de Erro",
@@ -153,8 +155,140 @@ def dashboard():
             st.markdown("### 🔢 Registros Filtrados")
             st.dataframe(df_filtrado_ocorrencias, use_container_width=True, hide_index=True)
 
+
     else:
         st.write("📦 Recebimento - em construção...")
 
+def desacordos():
+    st.title("❌ Dashboard de Desacordos / Ocorrências")
+
+    data_default = [df_desacordos["Data"].min(), df_desacordos["Data"].max()]
+    erro_default = "Todos"
+    setor_default = "Todos"
+    status_default = "Todos"
+
+    with st.sidebar:
+        st.subheader("🔍 Filtros Ocorrências")
+        if st.button("🔄 Resetar filtros", key="reset_ocorrencias"):
+            st.session_state["erro"] = erro_default
+            st.session_state["data_oc"] = data_default
+            st.session_state["setor_resp"] = setor_default
+            st.session_state["status"] = status_default
+            st.rerun()
+
+        data = st.date_input("Período (Ocorrências)", data_default, key="date_oc")
+
+        erro_sel = st.selectbox(
+            "Tipo de Erro",
+            ["Todos"] + sorted(df_desacordos["MOTIVO DA SUBSTITUIÇÃO"].dropna().unique()),
+            key="erro"
+        )
+
+        setor_sel = st.selectbox(
+            "Setor Responsável",
+            ["Todos"] + sorted(df_desacordos["Setor Responsavel"].dropna().unique()),
+            key="setor_resp"
+        )
+
+        status_sel = st.selectbox(
+            "Status",
+            ["Todos"] + sorted(df_desacordos["Status"].dropna().unique()),
+            key="status"
+        )
+
+    # --- Filtragem de período ---
+    if isinstance(data, (list, tuple)):
+        data_inicio, data_fim = pd.to_datetime(data[0]), pd.to_datetime(data[1])
+    else:
+        data_inicio, data_fim = pd.to_datetime(data), pd.to_datetime(data)
+
+    df_desacordos_filtrado = df_desacordos[
+        (df_desacordos["Data"] >= data_inicio) &
+        (df_desacordos["Data"] <= data_fim)
+    ]
+
+    # --- Aplicar filtros extras ---
+    if erro_sel != "Todos":
+        df_desacordos_filtrado = df_desacordos_filtrado[
+            df_desacordos_filtrado["MOTIVO DA SUBSTITUIÇÃO"] == erro_sel
+        ]
+
+    if setor_sel != "Todos":
+        df_desacordos_filtrado = df_desacordos_filtrado[
+            df_desacordos_filtrado["Setor Responsavel"] == setor_sel
+        ]
+
+    if status_sel != "Todos":
+        df_desacordos_filtrado = df_desacordos_filtrado[
+            df_desacordos_filtrado["Status"] == status_sel
+        ]
+
+    # --- Dashboard ---
+    if not df_desacordos_filtrado.empty:
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Total de Erros", len(df_desacordos_filtrado))
+        col2.metric("Finalizados", df_desacordos_filtrado[
+            df_desacordos_filtrado["Status"].str.contains("Finalizado", case=False, na=False)
+        ].shape[0])
+        col3.metric("Clientes Afetados", df_desacordos_filtrado["Cliente"].nunique())
+
+        st.markdown("---")
+
+        # Motivos
+        df_tipo_erro = df_desacordos_filtrado["MOTIVO DA SUBSTITUIÇÃO"].value_counts().reset_index()
+        df_tipo_erro.columns = ["Tipo de Erro", "Qtde"]
+        fig_tipo = px.bar(df_tipo_erro, y="Tipo de Erro", x="Qtde", orientation="h",
+                          title="Erros por Tipo", text="Qtde")
+        st.plotly_chart(fig_tipo, use_container_width=True)
+
+        # Setor
+        if "Setor Responsavel" in df_desacordos_filtrado.columns:
+            fig_setor = px.pie(df_desacordos_filtrado, names="Setor Responsavel",
+                               title="Erros por Setor Responsável")
+            st.plotly_chart(fig_setor, use_container_width=True)
+
+        # Evolução
+        erros_dia = df_desacordos_filtrado.groupby(df_desacordos_filtrado["Data"].dt.date).size().reset_index(name="Erros")
+        fig_evolucao = px.line(erros_dia, x="Data", y="Erros", title="Evolução Diária de Erros", markers=True)
+        st.plotly_chart(fig_evolucao, use_container_width=True)
+
+        # Ranking clientes
+        top_clientes = df_desacordos_filtrado["Cliente"].value_counts().reset_index().head(5)
+        top_clientes.columns = ["Cliente", "Ocorrências"]
+        st.subheader("🏆 Top 5 Clientes com mais Ocorrências")
+        st.dataframe(top_clientes, hide_index=True)
+
+        # Ranking Expedidor
+        if "Expedidor do Erro" in df_desacordos_filtrado.columns:
+            ranking_expedidor = (
+                df_desacordos_filtrado.groupby("Expedidor do Erro")
+                .size()
+                .reset_index(name="Qtde de Erros")
+                .sort_values("Qtde de Erros", ascending=False)
+            )
+            if not ranking_expedidor.empty:
+                st.markdown("### 🏆 Ranking de Erros por Expedidor")
+                fig_expedidor = px.bar(
+                    ranking_expedidor,
+                    x="Qtde de Erros",
+                    y="Expedidor do Erro",
+                    orientation="h",
+                    text="Qtde de Erros",
+                    title="Ranking dos Erros por Expedidor",
+                )
+                fig_expedidor.update_layout(yaxis={'categoryorder': 'total ascending'})
+                st.plotly_chart(fig_expedidor, use_container_width=True)
+
+        st.markdown("### 📋 Registros Filtrados")
+        st.dataframe(df_desacordos_filtrado, use_container_width=True, hide_index=True)
+
+    else:
+        st.info("Nenhuma ocorrência encontrada para os filtros aplicados.")
+
+
 if __name__ == "__main__":
-    dashboard()
+    aba = st.sidebar.radio("📂 Selecione o Dashboard", ["Emissão de CTe", "Desacordos"])
+    if aba == "Emissão de CTe":
+        dashboard()
+    else:
+        desacordos()

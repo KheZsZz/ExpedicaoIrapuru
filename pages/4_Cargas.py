@@ -1,8 +1,37 @@
 import requests
-import streamlit as st 
+import streamlit as st
 import folium
 from streamlit_folium import st_folium
 from openrouteservice import convert
+from geopy.distance import geodesic
+import pandas as pd
+
+# ---------------------------
+# Funções de suporte
+# ---------------------------
+
+@st.cache_data
+def load_pedagios():
+    return pd.read_excel("./database/pracas.xlsx")
+
+def calcular_pedagios(coords, tipo_veiculo):
+    df = load_pedagios()
+    pedagios_rota = []
+    for _, row in df.iterrows():
+        pedagio_coord = (row["lat"], row["lon"])
+        for ponto in coords:
+            distancia = geodesic(ponto, pedagio_coord).km
+            if distancia < 5:
+                valor = row.get("valor_leve", 0)
+                pedagios_rota.append({
+                    "nome": row["praca"],
+                    "rodovia": row["rodovia"],
+                    "valor": valor,
+                    "lat": row["lat"],
+                    "lon": row["lon"]
+                })
+                break
+    return pedagios_rota
 
 def get_coords(endereco):
     url = "https://nominatim.openstreetmap.org/search"
@@ -19,13 +48,15 @@ def get_coords(endereco):
         return None
     return float(dados[0]["lat"]), float(dados[0]["lon"])
 
-def fetch_api(remetente, destinatario):  
+def fetch_api(remetente, destinatario):
     coord_origem = get_coords(remetente)
     coord_destino = get_coords(destinatario)
+
     if not coord_origem or not coord_destino:
         return None
 
-    ORS_API_KEY = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6Ijc4NDkzZWRjZThhMTQ4NjZiMGUwNzMxNTA5MzI3Zjk3IiwiaCI6Im11cm11cjY0In0="  # Troque pela sua chave
+    ORS_API_KEY = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6Ijc4NDkzZWRjZThhMTQ4NjZiMGUwNzMxNTA5MzI3Zjk3IiwiaCI6Im11cm11cjY0In0="
+
     url = "https://api.openrouteservice.org/v2/directions/driving-car"
     headers = {"Authorization": ORS_API_KEY}
     body = {
@@ -39,57 +70,77 @@ def fetch_api(remetente, destinatario):
     except Exception:
         return None
 
+# ---------------------------
+# App Streamlit
+# ---------------------------
+
 def Cargas():
     st.set_page_config(page_title="Cargas", layout="wide")
     st.title("🚚 Frete Minimo")
 
-    with st.container(horizontal_alignment="center"):
-        col1, col2, col3 = st.columns([1,2,2], vertical_alignment="center", gap="medium")
-        type_vehicle = col1.selectbox(
-            label="🚗 Tipo de veículo:",
-            placeholder="Escolha o tipo de veículo",
-            options=("Carreta", "Carreta Trucada", "Truck", "Rodo-trem", "Vanderleia"),
-            index=0,
-            accept_new_options=True,
-        )
-        remetente = col2.text_input("🚩 Remetente:", value="Av. Miguel Pastuszak, 532")
-        destinatario = col3.text_input("🚩 Destinatário:", value="R. Mansueto Bossardi, 375")
+    col1, col2, col3 = st.columns([1, 2, 2])
+    type_vehicle = col1.selectbox(
+        "🚗 Tipo de veículo:",
+        options=("Carreta", "Carreta Trucada", "Truck", "Rodo-trem", "Vanderleia"),
+        index=0
+    )
+    remetente = col2.text_input("🚩 Remetente:", value="Av. Miguel Pastuszak, 532")
+    destinatario = col3.text_input("🚩 Destinatário:", value="R. Mansueto Bossardi, 375")
 
     rota = fetch_api(remetente, destinatario)
-
-    # Mostrar distância e duração
-    with st.container(vertical_alignment="center", horizontal_alignment="center", gap="medium"):
-        col1, col2, col3 = st.columns(3, vertical_alignment="center", gap="medium")
-        col1.metric(height="content", label="Distância (km)", value=f"{rota["routes"][0]["summary"]["distance"] / 1000:.2f} km")
-        col2.metric("Tempo estimado (h)", f"{rota["routes"][0]["summary"]["duration"] / 3600:.2f} h")
-        
-        if type_vehicle == "Carreta":
-            col3.metric("Valor frete:", f"R$ {(rota["routes"][0]["summary"]["distance"] / 1000) * 7:.2f}")
-        elif type_vehicle == "Carreta Trucada":
-            col3.metric("Valor frete:", f"R$ {(rota["routes"][0]["summary"]["distance"] / 1000) * 8:.2f}")
-        elif type_vehicle == "Truck":
-            col3.metric("Valor frete:", f"R$ {(rota["routes"][0]["summary"]["distance"] / 1000) * 5:.2f}")
-        elif type_vehicle == "Rodo-trem":
-            col3.metric("Valor frete:", f"R$ {(rota["routes"][0]["summary"]["distance"] / 1000) * 15:.2f}")
-        elif type_vehicle == "Vanderleia":
-            col3.metric("Valor frete:", f"R$ {(rota["routes"][0]["summary"]["distance"] / 1000) * 11:.2f}")
-
-
     if not rota or "routes" not in rota:
         st.error("Não foi possível obter a rota.")
-    else:
-        # Decodificar geometria para coordenadas (lat, lon)
-        geometry = rota["routes"][0]["geometry"]
-        coords = convert.decode_polyline(geometry)["coordinates"]
-        coords = [(lat, lon) for lon, lat in coords]  # Inverter ordem
+        st.json(rota)
+        return
 
-        # Criar mapa
-        mapa = folium.Map(location=coords[0], zoom_start=10)
-        folium.PolyLine(coords, color="blue", weight=5).add_to(mapa)
-        folium.Marker(coords[0], tooltip="Origem").add_to(mapa)
-        folium.Marker(coords[-1], tooltip="Destino").add_to(mapa)
+    summary = rota['routes'][0]['summary']
+    distancia_km = summary['distance'] / 1000
+    duracao_h = summary['duration'] / 3600
 
-        # Mostrar mapa
-        st_folium(mapa, center=True, use_container_width=True, height=500)
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Distância (km)", f"{distancia_km:.2f}")
+    col2.metric("Tempo estimado (h)", f"{duracao_h:.2f}")
 
+    frete_dict = {
+        "Carreta": 7,
+        "Carreta Trucada": 8,
+        "Truck": 5,
+        "Rodo-trem": 15,
+        "Vanderleia": 11
+    }
+    frete = distancia_km * frete_dict.get(type_vehicle, 0)
+    col3.metric("Valor frete (R$)", f"{frete:.2f}")
+
+    # Decodificar coordenadas da rota
+    geometry = rota["routes"][0]["geometry"]
+    coords = convert.decode_polyline(geometry)["coordinates"]
+    coords = [(lat, lon) for lon, lat in coords]
+
+    # Criar mapa
+    mapa = folium.Map(location=coords[0], zoom_start=10)
+    folium.PolyLine(coords, color="blue", weight=5).add_to(mapa)
+    folium.Marker(coords[0], tooltip="Origem").add_to(mapa)
+    folium.Marker(coords[-1], tooltip="Destino").add_to(mapa)
+
+    # ---------------------------
+    # Pedágios
+    # ---------------------------
+    pedagios_rota = calcular_pedagios(coords, type_vehicle)
+
+    # Métrica do valor total dos pedágios
+    valor_total_pedagios = sum(p["valor"] for p in pedagios_rota)
+    col4.metric("Valor pedágios (R$)", f"{valor_total_pedagios:.2f}")
+
+    # for p in pedagios_rota:
+    #     folium.Marker(
+    #         location=(p["lat"], p["lon"]),
+    #         popup=f"{p['nome']} - {p['rodovia']} - R${p['valor']:.2f}",
+    #         icon=folium.Icon(color="red", icon="road", prefix="fa")
+    #     ).add_to(mapa)
+
+    st_folium(mapa, center=True, use_container_width=True, height=500)
+
+# ---------------------------
+# Executar app
+# ---------------------------
 Cargas()

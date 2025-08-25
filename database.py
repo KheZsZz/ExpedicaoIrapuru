@@ -37,3 +37,17 @@ def ocorrencias():
 
     # df = df.astype(str)
     return df
+
+def desacordos():
+    
+    df = pd.read_csv(
+        "https://docs.google.com/spreadsheets/d/1d6dnzakl3ZXuQTyMzRAjugcL9g0mmw8r985PJj-IKA0/export?format=csv&gid=1041434519",
+    )
+    
+    df['Data'] = pd.to_datetime(df['Data'], errors='coerce')  # Garante que a coluna seja datetime
+    df['Data'] = df['Data'].dt.strftime('%d/%m/%Y')
+    
+    # df["Turno"] = df["Turno"].astype(str).str.strip()
+
+    # df = df.astype(str)
+    return df
