@@ -102,7 +102,7 @@ def Cargas():
     rota = fetch_api(remetente, destinatario)
     if not rota or "routes" not in rota:
         st.error("Não foi possível obter a rota.")
-        st.json(rota)
+        # st.json(rota)
         return
 
     # ---------------------------
@@ -112,7 +112,7 @@ def Cargas():
     distancia_km = summary['distance'] / 1000
     duracao_h = summary['duration'] / 3600
 
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
     col1.metric("Distância (km)", f"{distancia_km:.2f}")
     col2.metric("Tempo estimado (h)", f"{duracao_h:.2f}")
 
@@ -153,7 +153,7 @@ def Cargas():
         ).add_to(mapa)
 
     st_folium(mapa, center=True, use_container_width=True, height=500)
-    st.metric("Valor total dos pedágios (R$)", f"{total_pedagio:.2f}")
+    col4.metric("Valor pedágios (R$)", f"{total_pedagio:.2f}")
 
 # ---------------------------
 # Executar app
