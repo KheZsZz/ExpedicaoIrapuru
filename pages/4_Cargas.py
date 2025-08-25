@@ -12,14 +12,19 @@ import pandas as pd
 
 @st.cache_data
 def load_pedagios():
-    return pd.read_excel("./database/pracas.xlsx")
+    return pd.read_excel("./database/pracas.xlsx", usecols=["praca", "rodovia", "lat", "lon", "valor_leve"])
 
-def calcular_pedagios(coords, tipo_veiculo):
+@st.cache_data(show_spinner=False)
+def fetch_api_cache(remetente, destinatario):
+    return fetch_api(remetente, destinatario)
+
+
+def calcular_pedagios(coords, tipo_veiculo):    
     df = load_pedagios()
     pedagios_rota = []
     for _, row in df.iterrows():
         pedagio_coord = (row["lat"], row["lon"])
-        for ponto in coords:
+        for ponto in coords[::30]:
             distancia = geodesic(ponto, pedagio_coord).km
             if distancia < 5:
                 valor = row.get("valor_leve", 0)
