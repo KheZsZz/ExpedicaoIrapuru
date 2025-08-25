@@ -67,7 +67,7 @@ def fetch_api(remetente, destinatario):
     if not coord_origem or not coord_destino:
         return None
 
-    ORS_API_KEY = "SUA_CHAVE_ORS_AQUI"
+    ORS_API_KEY = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6Ijc4NDkzZWRjZThhMTQ4NjZiMGUwNzMxNTA5MzI3Zjk3IiwiaCI6Im11cm11cjY0In0="
     url = "https://api.openrouteservice.org/v2/directions/driving-car"
     headers = {"Authorization": ORS_API_KEY}
     body = {
