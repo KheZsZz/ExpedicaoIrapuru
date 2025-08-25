@@ -8,4 +8,4 @@ plotly.express
 folium 
 streamlit_folium
 openrouteservice
-geodesic
+geopy
