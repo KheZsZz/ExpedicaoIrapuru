@@ -136,12 +136,12 @@ def Cargas():
     valor_total_pedagios = sum(p["valor"] for p in pedagios_rota)
     col4.metric("Valor pedágios (R$)", f"{valor_total_pedagios:.2f}")
 
-    # for p in pedagios_rota:
-    #     folium.Marker(
-    #         location=(p["lat"], p["lon"]),
-    #         popup=f"{p['nome']} - {p['rodovia']} - R${p['valor']:.2f}",
-    #         icon=folium.Icon(color="red", icon="road", prefix="fa")
-    #     ).add_to(mapa)
+    for p in pedagios_rota:
+        folium.Marker(
+            location=(p["lat"], p["lon"]),
+            popup=f"{p['nome']} - {p['rodovia']} - R${p['valor']:.2f}",
+            icon=folium.Icon(color="red", icon="road", prefix="fa")
+        ).add_to(mapa)
 
     st_folium(mapa, center=True, use_container_width=True, height=500)
 
