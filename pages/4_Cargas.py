@@ -10,33 +10,34 @@ import pandas as pd
 # Funções de suporte
 # ---------------------------
 
-@st.cache_data
+# Cache do arquivo de pedágios
+@st.cache_data(show_spinner=False)
 def load_pedagios():
-    return pd.read_excel("./database/pracas.xlsx", usecols=["praca", "rodovia", "lat", "lon", "valor_leve"])
+    df = pd.read_excel("./database/pracas.xlsx", usecols=["praca", "rodovia", "lat", "lon", "valor_leve"])
+    return df
 
+# Cache da API de rotas
 @st.cache_data(show_spinner=False)
 def fetch_api_cache(remetente, destinatario):
-    return fetch_api(remetente, destinatario)
+    coord_origem = get_coords(remetente)
+    coord_destino = get_coords(destinatario)
 
+    if not coord_origem or not coord_destino:
+        return None
 
-def calcular_pedagios(coords, tipo_veiculo):    
-    df = load_pedagios()
-    pedagios_rota = []
-    for _, row in df.iterrows():
-        pedagio_coord = (row["lat"], row["lon"])
-        for ponto in coords[::30]:
-            distancia = geodesic(ponto, pedagio_coord).km
-            if distancia < 5:
-                valor = row.get("valor_leve", 0)
-                pedagios_rota.append({
-                    "nome": row["praca"],
-                    "rodovia": row["rodovia"],
-                    "valor": valor,
-                    "lat": row["lat"],
-                    "lon": row["lon"]
-                })
-                break
-    return pedagios_rota
+    ORS_API_KEY = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6Ijc4NDkzZWRjZThhMTQ4NjZiMGUwNzMxNTA5MzI3Zjk3IiwiaCI6Im11cm11cjY0In0="
+    url = "https://api.openrouteservice.org/v2/directions/driving-car"
+    headers = {"Authorization": ORS_API_KEY}
+    body = {
+        "coordinates": [
+            [coord_origem[1], coord_origem[0]],
+            [coord_destino[1], coord_destino[0]]
+        ]
+    }
+    try:
+        return requests.post(url, json=body, headers=headers).json()
+    except Exception:
+        return None
 
 def get_coords(endereco):
     url = "https://nominatim.openstreetmap.org/search"
@@ -53,27 +54,28 @@ def get_coords(endereco):
         return None
     return float(dados[0]["lat"]), float(dados[0]["lon"])
 
-def fetch_api(remetente, destinatario):
-    coord_origem = get_coords(remetente)
-    coord_destino = get_coords(destinatario)
+def calcular_pedagios(coords, tipo_veiculo):
+    df = load_pedagios()
+    pedagios_rota = []
 
-    if not coord_origem or not coord_destino:
-        return None
+    # Reduz pontos da rota para acelerar
+    rota_pontos = coords[::20]
 
-    ORS_API_KEY = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6Ijc4NDkzZWRjZThhMTQ4NjZiMGUwNzMxNTA5MzI3Zjk3IiwiaCI6Im11cm11cjY0In0="
-
-    url = "https://api.openrouteservice.org/v2/directions/driving-car"
-    headers = {"Authorization": ORS_API_KEY}
-    body = {
-        "coordinates": [
-            [coord_origem[1], coord_origem[0]],
-            [coord_destino[1], coord_destino[0]]
-        ]
-    }
-    try:
-        return requests.post(url, json=body, headers=headers).json()
-    except Exception:
-        return None
+    for _, row in df.iterrows():
+        pedagio_coord = (row["lat"], row["lon"])
+        for ponto in rota_pontos:
+            distancia = geodesic(ponto, pedagio_coord).km
+            if distancia < 5:
+                valor = row.get("valor_leve", 0)
+                pedagios_rota.append({
+                    "nome": row["praca"],
+                    "rodovia": row["rodovia"],
+                    "valor": valor,
+                    "lat": row["lat"],
+                    "lon": row["lon"]
+                })
+                break
+    return pedagios_rota
 
 # ---------------------------
 # App Streamlit
@@ -92,50 +94,38 @@ def Cargas():
     remetente = col2.text_input("🚩 Remetente:", value="Av. Miguel Pastuszak, 532")
     destinatario = col3.text_input("🚩 Destinatário:", value="R. Mansueto Bossardi, 375")
 
-    rota = fetch_api(remetente, destinatario)
+    rota = fetch_api_cache(remetente, destinatario)
     if not rota or "routes" not in rota:
         st.error("Não foi possível obter a rota.")
         st.json(rota)
         return
 
+    # Distância e tempo
     summary = rota['routes'][0]['summary']
     distancia_km = summary['distance'] / 1000
     duracao_h = summary['duration'] / 3600
 
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3 = st.columns(3)
     col1.metric("Distância (km)", f"{distancia_km:.2f}")
     col2.metric("Tempo estimado (h)", f"{duracao_h:.2f}")
 
-    frete_dict = {
-        "Carreta": 7,
-        "Carreta Trucada": 8,
-        "Truck": 5,
-        "Rodo-trem": 15,
-        "Vanderleia": 11
-    }
-    frete = distancia_km * frete_dict.get(type_vehicle, 0)
-    col3.metric("Valor frete (R$)", f"{frete:.2f}")
-
-    # Decodificar coordenadas da rota
+    # Decodificar rota
     geometry = rota["routes"][0]["geometry"]
     coords = convert.decode_polyline(geometry)["coordinates"]
     coords = [(lat, lon) for lon, lat in coords]
 
+    # Calcular pedágios
+    pedagios_rota = calcular_pedagios(coords, type_vehicle)
+    total_pedagio = sum([p["valor"] for p in pedagios_rota])
+    col3.metric("Valor pedágio (R$)", f"{total_pedagio:.2f}")
+
     # Criar mapa
     mapa = folium.Map(location=coords[0], zoom_start=10)
-    folium.PolyLine(coords, color="blue", weight=5).add_to(mapa)
+    folium.PolyLine(coords[::5], color="blue", weight=5).add_to(mapa)  # reduz pontos para plot
     folium.Marker(coords[0], tooltip="Origem").add_to(mapa)
     folium.Marker(coords[-1], tooltip="Destino").add_to(mapa)
 
-    # ---------------------------
-    # Pedágios
-    # ---------------------------
-    pedagios_rota = calcular_pedagios(coords, type_vehicle)
-
-    # Métrica do valor total dos pedágios
-    valor_total_pedagios = sum(p["valor"] for p in pedagios_rota)
-    col4.metric("Valor pedágios (R$)", f"{valor_total_pedagios:.2f}")
-
+    # Marcar pedágios
     for p in pedagios_rota:
         folium.Marker(
             location=(p["lat"], p["lon"]),
