@@ -73,7 +73,7 @@ def dashboard():
         # Aplicar filtro de colaborador
         if colaborador != "Todos":
             df_filtrado = df_filtrado[df_filtrado["Responsável"] == colaborador]
-            df_filtrado_ocorrencias = df_filtrado_ocorrencias[df_filtrado_ocorrencias["Responsável correção"] == colaborador]
+            df_filtrado_ocorrencias = df_filtrado_ocorrencias[df_filtrado_ocorrencias["Expedidor do Erro"] == colaborador]
 
         if df_filtrado.empty:
             st.warning("Nenhum dado encontrado para os filtros selecionados.")
