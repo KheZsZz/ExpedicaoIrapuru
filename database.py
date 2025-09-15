@@ -11,7 +11,6 @@ def conectData () :
 
     return df
 
-
 def conhecimentos ():
     df = pd.read_csv(
         "https://docs.google.com/spreadsheets/d/1d6dnzakl3ZXuQTyMzRAjugcL9g0mmw8r985PJj-IKA0/export?format=csv&gid=2004182381", 

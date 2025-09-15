@@ -73,7 +73,7 @@ def dashboard():
         # Aplicar filtro de colaborador
         if colaborador != "Todos":
             df_filtrado = df_filtrado[df_filtrado["Responsável"] == colaborador]
-            df_filtrado_ocorrencias = df_filtrado_ocorrencias[df_filtrado_ocorrencias["Descontar"] == colaborador]
+            df_filtrado_ocorrencias = df_filtrado_ocorrencias[df_filtrado_ocorrencias["Responsável correção"] == colaborador]
 
         if df_filtrado.empty:
             st.warning("Nenhum dado encontrado para os filtros selecionados.")
@@ -155,6 +155,8 @@ def dashboard():
             st.markdown("### 🔢 Registros Filtrados")
             st.dataframe(df_filtrado_ocorrencias, use_container_width=True, hide_index=True)
 
+            st.dataframe(df_ocorrencias)
+
 
     else:
         st.write("📦 Recebimento - em construção...")
@@ -166,6 +168,7 @@ def desacordos():
     erro_default = "Todos"
     setor_default = "Todos"
     status_default = "Todos"
+    colaborador_default = "Todos"
 
     with st.sidebar:
         st.subheader("🔍 Filtros Ocorrências")
@@ -174,9 +177,16 @@ def desacordos():
             st.session_state["data_oc"] = data_default
             st.session_state["setor_resp"] = setor_default
             st.session_state["status"] = status_default
+            st.session_state["colaborador"] = colaborador_default
             st.rerun()
 
         data = st.date_input("Período (Ocorrências)", data_default, key="date_oc")
+
+        colaborador_default = st.selectbox(
+            "Colaborador",
+            ["Todos"] + sorted(df_desacordos["Descontar"].dropna().unique()),
+            key="colaborador"
+        )
 
         erro_sel = st.selectbox(
             "Tipo de Erro",
@@ -208,6 +218,10 @@ def desacordos():
     ]
 
     # --- Aplicar filtros extras ---
+    if colaborador_default != "Todos":
+        df_desacordos_filtrado = df_desacordos_filtrado[
+            df_desacordos_filtrado["Descontar"] == colaborador_default
+        ]
     if erro_sel != "Todos":
         df_desacordos_filtrado = df_desacordos_filtrado[
             df_desacordos_filtrado["MOTIVO DA SUBSTITUIÇÃO"] == erro_sel
