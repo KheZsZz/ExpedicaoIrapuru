@@ -155,7 +155,7 @@ def dashboard():
             st.markdown("### 🔢 Registros Filtrados")
             st.dataframe(df_filtrado_ocorrencias, use_container_width=True, hide_index=True)
 
-            st.dataframe(df_ocorrencias)
+            # st.dataframe(df_ocorrencias)
 
 
     else:

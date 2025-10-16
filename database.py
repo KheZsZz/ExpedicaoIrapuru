@@ -50,3 +50,34 @@ def desacordos():
 
     # df = df.astype(str)
     return df
+
+def fechamento():
+    df = pd.read_csv(
+        "https://docs.google.com/spreadsheets/d/1EScFjmlwCXi212yQVz6b7sj-d7XniwlkR1lldTAQkRk/export?format=csv&gid=0",
+        header=1,
+        dtype={
+            "Placa": str,
+            "Destino": str,
+            "Tipo": str,
+            "Usuário": str,
+            "OBS": str
+        },
+        # parse_dates=["Data "], 
+        dayfirst=True, 
+        # names= 1      
+    )
+    
+    for col in ["inicio", "Finalização", "Total (min)"]:
+        if col in df.columns:
+            df[col] = pd.to_datetime(df[col], errors="coerce").dt.time
+
+    bool_cols = ["CT-e emitido", "Recepção de NFs", "Pedágio"]
+    for col in bool_cols:
+        if col in df.columns:
+            df[col] = df[col].astype(str).str.lower().isin(["true", "1", "sim", "yes"])
+    
+    
+    df = df.dropna(subset=["Data"])
+
+    return df
+
