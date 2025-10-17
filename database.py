@@ -1,4 +1,5 @@
 import pandas as pd
+from datetime import datetime, timedelta
 
 def conectData () :
     df = pd.read_csv("https://docs.google.com/spreadsheets/d/1d6dnzakl3ZXuQTyMzRAjugcL9g0mmw8r985PJj-IKA0/export?format=csv&gid=1435904190")
@@ -54,30 +55,16 @@ def desacordos():
 def fechamento():
     df = pd.read_csv(
         "https://docs.google.com/spreadsheets/d/1EScFjmlwCXi212yQVz6b7sj-d7XniwlkR1lldTAQkRk/export?format=csv&gid=0",
-        header=1,
-        dtype={
-            "Placa": str,
-            "Destino": str,
-            "Tipo": str,
-            "Usuário": str,
-            "OBS": str
-        },
-        # parse_dates=["Data "], 
-        dayfirst=True, 
-        # names= 1      
-    )
+        header=1 )
     
-    for col in ["inicio", "Finalização", "Total (min)"]:
-        if col in df.columns:
-            df[col] = pd.to_datetime(df[col], errors="coerce").dt.time
-
-    bool_cols = ["CT-e emitido", "Recepção de NFs", "Pedágio"]
-    for col in bool_cols:
-        if col in df.columns:
-            df[col] = df[col].astype(str).str.lower().isin(["true", "1", "sim", "yes"])
+    df = df.astype(str)
     
-    
-    df = df.dropna(subset=["Data"])
+    df["Data"] = pd.to_datetime(df["Data"], errors="coerce", dayfirst=True)
+    df['Total (min)'] = pd.to_timedelta(df['Total (min)'], errors='coerce').dt.total_seconds() / 60
+    df['CT-e emitido'] = df['CT-e emitido'].astype(str).str.upper().isin(['TRUE', 'VERDADEIRO', '1'])
+    df['Recepção de NFs'] = df['Recepção de NFs'].astype(str).str.upper().isin(['TRUE', 'VERDADEIRO', '1'])
+    df['Pedágio'] = df['Pedágio'].astype(str).str.upper().isin(['TRUE', 'VERDADEIRO', '1'])
+        
 
     return df
 

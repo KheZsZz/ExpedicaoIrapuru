@@ -1,0 +1,135 @@
+import pandas as pd
+import streamlit as st
+from io import StringIO
+
+# ==============================
+# 🧩 CONFIGURAÇÃO INICIAL
+# ==============================
+st.set_page_config(page_title="Painel Operacional", page_icon="🚛", layout="wide")
+
+st.title("🚛 Painel Operacional - Análises de Viagens")
+st.markdown("Dashboard interativo com base no histórico de lançamentos, baixas e emissões de CT-e/NF-e.")
+
+# ==============================
+# 📂 UPLOAD OU FONTE DE DADOS
+# ==============================
+st.sidebar.header("📤 Fonte de Dados")
+uploaded_file = st.sidebar.file_uploader("Envie o arquivo CSV (ou TXT)", type=["csv", "txt"])
+
+if uploaded_file is not None:
+    content = uploaded_file.read().decode("utf-8")
+    df = pd.read_csv(StringIO(content), sep="\t|,", engine="python")
+else:
+    st.warning("Envie o arquivo CSV com as colunas: Data, Placa, Início, Finalização, Total (min), Destino, Tipo, CT-e emitido, Recepção de NFs, Pedágio, Usuário, OBS.")
+    st.stop()
+
+# ==============================
+# 🔧 LIMPEZA E AJUSTES
+# ==============================
+df.columns = df.columns.str.strip()
+df['Data'] = pd.to_datetime(df['Data'], errors='coerce', dayfirst=True)
+df['Total (min)'] = pd.to_timedelta(df['Total (min)'], errors='coerce').dt.total_seconds() / 60
+df['CT-e emitido'] = df['CT-e emitido'].astype(str).str.upper().isin(['TRUE', 'VERDADEIRO', '1'])
+df['Recepção de NFs'] = df['Recepção de NFs'].astype(str).str.upper().isin(['TRUE', 'VERDADEIRO', '1'])
+df['Pedágio'] = df['Pedágio'].astype(str).str.upper().isin(['TRUE', 'VERDADEIRO', '1'])
+
+# ==============================
+# 🧮 FILTROS
+# ==============================
+st.sidebar.header("🔍 Filtros")
+
+datas = st.sidebar.multiselect("Filtrar por Data:", sorted(df['Data'].dropna().unique()))
+if datas:
+    df = df[df['Data'].isin(datas)]
+
+placas = st.sidebar.multiselect("Filtrar por Placa:", sorted(df['Placa'].dropna().unique()))
+if placas:
+    df = df[df['Placa'].isin(placas)]
+
+tipos = st.sidebar.multiselect("Filtrar por Tipo:", sorted(df['Tipo'].dropna().unique()))
+if tipos:
+    df = df[df['Tipo'].isin(tipos)]
+
+destinos = st.sidebar.multiselect("Filtrar por Destino:", sorted(df['Destino'].dropna().unique()))
+if destinos:
+    df = df[df['Destino'].isin(destinos)]
+
+st.sidebar.markdown("---")
+st.sidebar.info(f"Total de registros filtrados: {len(df)}")
+
+# ==============================
+# 📊 MÉTRICAS RESUMO
+# ==============================
+col1, col2, col3, col4 = st.columns(4)
+
+col1.metric("⏱ Tempo Total (min)", f"{df['Total (min)'].sum():,.0f}")
+col2.metric("📦 Total de Operações", f"{len(df):,}")
+col3.metric("🧾 % CT-e Emitido", f"{(df['CT-e emitido'].mean()*100):.1f}%")
+col4.metric("💰 % com Pedágio", f"{(df['Pedágio'].mean()*100):.1f}%")
+
+# ==============================
+# 📈 GRÁFICOS PRINCIPAIS
+# ==============================
+st.subheader("📊 Visão Geral das Operações")
+
+aba1, aba2, aba3 = st.tabs(["Por Tipo", "Por Destino", "Por Data"])
+
+with aba1:
+    tipo_sum = df.groupby("Tipo")["Total (min)"].sum().sort_values(ascending=False)
+    st.bar_chart(tipo_sum, use_container_width=True)
+
+with aba2:
+    dest_sum = df.groupby("Destino")["Total (min)"].sum().sort_values(ascending=False).head(10)
+    st.bar_chart(dest_sum, use_container_width=True)
+
+with aba3:
+    data_sum = df.groupby("Data")["Total (min)"].sum().sort_index()
+    st.line_chart(data_sum, use_container_width=True)
+
+# ==============================
+# 🚚 DETALHAMENTO
+# ==============================
+st.subheader("📋 Detalhamento das Operações")
+
+st.dataframe(
+    df[[
+        "Data", "Placa", "Tipo", "Destino", "Total (min)",
+        "CT-e emitido", "Recepção de NFs", "Pedágio", "OBS"
+    ]],
+    use_container_width=True,
+    hide_index=True
+)
+
+# ==============================
+# 📤 EXPORTAÇÃO
+# ==============================
+st.download_button(
+    "⬇️ Baixar CSV Filtrado",
+    df.to_csv(index=False).encode("utf-8"),
+    "relatorio_filtrado.csv",
+    "text/csv"
+)
+
+# ==============================
+# 🧠 INSIGHTS AUTOMÁTICOS
+# ==============================
+st.subheader("💡 Insights Automáticos")
+
+mais_lento = df.loc[df['Total (min)'].idxmax()] if len(df) > 0 else None
+if mais_lento is not None:
+    st.markdown(f"""
+    - 🚛 **Placa com maior operação:** `{mais_lento['Placa']}` com **{mais_lento['Total (min)']:.0f} min**
+    - 🏙️ **Destino:** {mais_lento['Destino']}
+    - 📅 **Data:** {mais_lento['Data'].strftime('%d/%m/%Y')}
+    """)
+
+if df['CT-e emitido'].mean() < 0.7:
+    st.warning("⚠️ Menos de 70% das operações tiveram CT-e emitido.")
+else:
+    st.success("✅ Alta conformidade de emissão de CT-e.")
+
+if df['Pedágio'].mean() > 0.5:
+    st.info("💰 Mais da metade das viagens teve pedágio registrado.")
+
+st.markdown("---")
+st.caption("Desenvolvido por Kevin Oliveira - Análise Operacional Automática © 2025")
