@@ -65,6 +65,6 @@ def fechamento():
     df['Recepção de NFs'] = df['Recepção de NFs'].astype(str).str.upper().isin(['TRUE', 'VERDADEIRO', '1'])
     df['Pedágio'] = df['Pedágio'].astype(str).str.upper().isin(['TRUE', 'VERDADEIRO', '1'])
         
-
+    df['Data'] = df['Data'].dropna()
     return df
 
