@@ -44,7 +44,7 @@ def main():
         df_filtrado = df_filtrado[df_filtrado["Colaborador"] == colaborador]
 
     if tipo_operacao != "Todos":
-        df_filtrado = df_filtrado[df_filtrado["Tipo de Operação"] == tipo_operacao]
+        df_filtrado = df_filtrado[df_filtrado["Tipo"] == tipo_operacao]
     
     
     col1, col2, col3 = st.columns(3)
