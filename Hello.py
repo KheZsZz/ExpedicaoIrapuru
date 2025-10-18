@@ -84,9 +84,9 @@ def main():
 
     st.subheader("📋 Detalhamento das Operações")
     st.dataframe(
-        df[[
+        df_filtrado[[
             "Data", "Placa", "Tipo", "Destino", "Total (min)",
-            "CT-e emitido", "Recepção de NFs", "Pedágio", "OBS"
+            "CT-e emitido", "Recepção de NFs", "Pedágio", "Colaborador"
         ]],
         use_container_width=True,
         hide_index=True

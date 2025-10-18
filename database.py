@@ -56,7 +56,7 @@ def fechamento():
     df = pd.read_csv(
         "https://docs.google.com/spreadsheets/d/1EScFjmlwCXi212yQVz6b7sj-d7XniwlkR1lldTAQkRk/export?format=csv&gid=0",
         header=1 )
-    
+    df = df.dropna(subset=["Data"])
     df = df.astype(str)
     
     df["Data"] = pd.to_datetime(df["Data"], errors="coerce", dayfirst=True)
@@ -65,6 +65,6 @@ def fechamento():
     df['Recepção de NFs'] = df['Recepção de NFs'].astype(str).str.upper().isin(['TRUE', 'VERDADEIRO', '1'])
     df['Pedágio'] = df['Pedágio'].astype(str).str.upper().isin(['TRUE', 'VERDADEIRO', '1'])
         
-    df = df.dropna(subset=["Data"])
+    
     return df
 
