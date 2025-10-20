@@ -1,7 +1,8 @@
 import streamlit as st
 import pandas as pd
 from database import fechamento
-from relatorios import enviar_relatorio_email_html
+from relatorios import enviar_relatorio_email
+
 import plotly.express as px
 
 df = fechamento()
@@ -61,7 +62,7 @@ def main():
 
                 if enviar:
                     # Gera e envia relatório HTML interativo
-                    enviar_relatorio_email_html(df_filtrado, remetente, senha, destinatario)
+                    enviar_relatorio_email(df_filtrado, remetente, senha, destinatario)
                     st.success("✅ Relatório enviado com sucesso!")
                     st.session_state["mostrar_form"] = False
 
