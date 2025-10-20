@@ -4,6 +4,8 @@ import plotly.express as px
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
+import io
+from PIL import Image
 
 # -----------------------------
 # 1️⃣ Função para gerar gráficos e salvar imagens
@@ -23,7 +25,12 @@ def gerar_graficos(df):
         textfont_size=14,
         hovertemplate="<b>%{label}</b><br>CT-es: %{value}<br>Percentual: %{percent}",
     )
-    fig1.write_image("grafico_cte_colaborador.png")
+    img_bytes = fig1.to_image(format="png", engine="json")  # usa engine interno, sem Chrome
+    img_buffer = io.BytesIO(img_bytes)
+    image = Image.open(img_buffer)
+
+    # Salva localmente (opcional)
+    image.save("grafico_cte_colaborador.png")
 
     # Gráfico 2 - Tempo médio por tipo
     tempo_tipo = df.groupby("Tipo")["Total (min)"].mean().reset_index()
@@ -35,8 +42,12 @@ def gerar_graficos(df):
         text_auto=".1f",
         color="Tipo",
     )
-    fig2.write_image("grafico_tempo_tipo.png")
+    img_bytes = fig1.to_image(format="png", engine="json")  # usa engine interno, sem Chrome
+    img_buffer = io.BytesIO(img_bytes)
+    image = Image.open(img_buffer)
 
+    # Salva localmente (opcional)
+    image.save("grafico_tempo_tipo.png")
     return fig1, fig2
 
 
