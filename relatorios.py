@@ -33,7 +33,7 @@ def gerar_graficos(df):
         hole=0.4,
         color="Colaborador"
     )
-    img_bytes1 = fig1.to_image(format="png")
+    img_bytes1 = fig1.to_image(format="png",engine="plotly")
     imagens.append(img_bytes1)
 
     # Gráfico 2 - Tempo médio por tipo
@@ -46,7 +46,7 @@ def gerar_graficos(df):
         text_auto=".1f",
         color="Tipo"
     )
-    img_bytes2 = fig2.to_image(format="png")
+    img_bytes2 = fig2.to_image(format="png", engine="plotly")
     imagens.append(img_bytes2)
 
     return imagens
