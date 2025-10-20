@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from database import fechamento
-from relatorios import gerar_graficos_html, enviar_relatorio_email_html
+from relatorios import enviar_relatorio_email_html
 import plotly.express as px
 
 df = fechamento()
