@@ -148,6 +148,7 @@ def main():
         names="Colaborador",
         values="QTD de CT-e",
         title="📦 Percentual de CT-e Baixados por Colaborador",
+        hole=0.1  # tipo 'donut', se quiser pizza normal, remova
     )
 
     fig.update_traces(
