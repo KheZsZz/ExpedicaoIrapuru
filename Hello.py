@@ -1,8 +1,9 @@
 import streamlit as st
 import pandas as pd
-from database import conectData, fechamento
+from database import fechamento
+from relatorios import gerar_graficos, enviar_relatorio_email
 import plotly.express as px
-# df = conectData()
+
 df = fechamento()
 
 
@@ -34,19 +35,38 @@ def main():
             "⚙️ Tipo de Operação",
             options=["Todos",*sorted(df["Tipo"].dropna().unique().tolist())]
         )
+        # Filtros ============
         
-    # Filtros ============
-    df_filtrado = df[
-        (df["Data"] >= pd.to_datetime(data_inicial)) &
-        (df["Data"] <= pd.to_datetime(data_final))
-    ]
+        df_filtrado = df[
+            (df["Data"] >= pd.to_datetime(data_inicial)) &
+            (df["Data"] <= pd.to_datetime(data_final))
+        ]
+         
+        if colaborador != "Todos":
+            df_filtrado = df_filtrado[df_filtrado["Colaborador"] == colaborador]
 
-    if colaborador != "Todos":
-        df_filtrado = df_filtrado[df_filtrado["Colaborador"] == colaborador]
+        if tipo_operacao != "Todos":
+            df_filtrado = df_filtrado[df_filtrado["Tipo"] == tipo_operacao]
+        
 
-    if tipo_operacao != "Todos":
-        df_filtrado = df_filtrado[df_filtrado["Tipo"] == tipo_operacao]
-    
+        if st.button("📊 Gerar e Enviar Relatório"):
+            st.session_state["mostrar_form"] = True  # ativa o pop-up
+            
+        if st.session_state.get("mostrar_form", False):
+            with st.form("form_email"):
+                st.subheader("📬 Enviar relatório por e-mail")
+
+                remetente = st.secrets["EMAIL_USER"]
+                senha = st.secrets["EMAIL_PASS"]
+                destinatario = st.secrets["EMAIL_CC"]
+
+                enviar = st.form_submit_button("🚀 Enviar Agora")
+
+                if enviar:
+                    gerar_graficos(df_filtrado)
+                    enviar_relatorio_email(df_filtrado, remetente, senha, destinatario)
+                    st.session_state["mostrar_form"] = False
+   
     
     
     
