@@ -5,10 +5,9 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 import io
-from PIL import Image
 
 # -----------------------------
-# 1️⃣ Função para gerar gráficos e salvar imagens
+# 1️⃣ Função para gerar gráficos e retornar bytes
 # -----------------------------
 def gerar_graficos(df):
     # Gráfico 1 - CT-e por colaborador
@@ -18,19 +17,14 @@ def gerar_graficos(df):
         values="QTD de CT-e",
         title="Distribuição de CT-e por Colaborador",
         hole=0.4,
-        color= "Colaborador",
+        color="Colaborador",
     )
     fig1.update_traces(
         textinfo='percent+label+value',
         textfont_size=14,
         hovertemplate="<b>%{label}</b><br>CT-es: %{value}<br>Percentual: %{percent}",
     )
-    img_bytes = fig1.to_image(format="png")  # usa engine interno, sem Chrome
-    img_buffer = io.BytesIO(img_bytes)
-    image = Image.open(img_buffer)
-
-    # Salva localmente (opcional)
-    image.save("grafico_cte_colaborador.png")
+    img1_bytes = fig1.to_image(format="png")  # bytes do PNG
 
     # Gráfico 2 - Tempo médio por tipo
     tempo_tipo = df.groupby("Tipo")["Total (min)"].mean().reset_index()
@@ -42,26 +36,24 @@ def gerar_graficos(df):
         text_auto=".1f",
         color="Tipo",
     )
-    img_bytes = fig1.to_image(format="png")  # usa engine interno, sem Chrome
-    img_buffer = io.BytesIO(img_bytes)
-    image = Image.open(img_buffer)
+    img2_bytes = fig2.to_image(format="png")  # bytes do PNG
 
-    # Salva localmente (opcional)
-    image.save("grafico_tempo_tipo.png")
-    return fig1, fig2
-
+    return img1_bytes, img2_bytes
 
 # -----------------------------
-# 2️⃣ Função para montar e enviar e-mail
+# 2️⃣ Função para montar e enviar e-mail com gráficos inline
 # -----------------------------
 def enviar_relatorio_email(df, remetente, senha, destinatario):
     data_hoje = datetime.now().strftime("%d/%m/%Y")
 
-    # Resumo dos indicadores
+    # Indicadores
     total_registros = len(df)
     total_lancamentos = (df["Tipo"] == "Lançamento").sum()
     total_baixas = (df["Tipo"] == "Baixa").sum()
     total_colaboradores = df["Colaborador"].nunique()
+
+    # Gera gráficos e obtém bytes
+    img1_bytes, img2_bytes = gerar_graficos(df)
 
     # Monta e-mail
     msg = MIMEMultipart()
@@ -90,9 +82,7 @@ def enviar_relatorio_email(df, remetente, senha, destinatario):
         <img src="cid:grafico2" width="600"/><br><br>
 
         <p>Atenciosamente,
-            <br>
-            <br>
-            <br>
+            <br><br>
             <b>IRAPURU TRANSPORTES LTDA</b><br>
             <b>Sistema de monitoramento Operacional</b><br>
             <b>Bot system</b><br>
@@ -103,12 +93,11 @@ def enviar_relatorio_email(df, remetente, senha, destinatario):
 
     msg.attach(MIMEText(corpo_html, "html"))
 
-    # Anexa imagens
-    for i, img_path in enumerate(["grafico_cte_colaborador.png", "grafico_tempo_tipo.png"], start=1):
-        with open(img_path, "rb") as f:
-            img = MIMEImage(f.read())
-            img.add_header("Content-ID", f"<grafico{i}>")
-            msg.attach(img)
+    # Anexa gráficos em memória
+    for i, img_bytes in enumerate([img1_bytes, img2_bytes], start=1):
+        img = MIMEImage(img_bytes)
+        img.add_header("Content-ID", f"<grafico{i}>")
+        msg.attach(img)
 
     # Envio SMTP
     with smtplib.SMTP("smtp.gmail.com", 587) as server:
