@@ -141,12 +141,23 @@ def main():
         .sort_values("QTD de CT-e", ascending=False)
     )
 
+
+    # Cria o gráfico de pizza
     fig = px.pie(
         cte_por_colab,
         names="Colaborador",
         values="QTD de CT-e",
         title="📦 Percentual de CT-e Baixados por Colaborador",
-        hole=0.3
+    )
+
+    fig.update_traces(
+        textinfo="percent+label+value",
+        pull=[0.05 if i == 0 else 0 for i in range(len(cte_por_colab))],  # destaque leve no maior
+    )
+
+    fig.update_layout(
+        title_x=0,
+        showlegend=True
     )
     st.plotly_chart(fig, use_container_width=True)
 
