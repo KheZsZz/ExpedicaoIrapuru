@@ -25,7 +25,7 @@ def gerar_graficos(df):
         textfont_size=14,
         hovertemplate="<b>%{label}</b><br>CT-es: %{value}<br>Percentual: %{percent}",
     )
-    img_bytes = fig1.to_image(format="png", engine="kaleido")  # usa engine interno, sem Chrome
+    img_bytes = fig1.to_image(format="png")  # usa engine interno, sem Chrome
     img_buffer = io.BytesIO(img_bytes)
     image = Image.open(img_buffer)
 
@@ -42,7 +42,7 @@ def gerar_graficos(df):
         text_auto=".1f",
         color="Tipo",
     )
-    img_bytes = fig1.to_image(format="png", engine="kaleido")  # usa engine interno, sem Chrome
+    img_bytes = fig1.to_image(format="png")  # usa engine interno, sem Chrome
     img_buffer = io.BytesIO(img_bytes)
     image = Image.open(img_buffer)
 
