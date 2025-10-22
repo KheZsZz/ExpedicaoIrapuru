@@ -63,7 +63,7 @@ def gerar_graficos(df):
 # -----------------------------
 # 2️⃣ Função para enviar e-mail
 # -----------------------------
-def enviar_relatorio_email(df, remetente, senha, destinatario, subjects):
+def enviar_relatorio_email(df, remetente, senha, destinatario):
     imagens = gerar_graficos(df)
     data_hoje = datetime.now().strftime("%d/%m/%Y")
 
@@ -77,7 +77,7 @@ def enviar_relatorio_email(df, remetente, senha, destinatario, subjects):
     msg["Subject"] = f"📊 Relatório Diário - {data_hoje}"
     msg["From"] = remetente
     msg["To"] = destinatario
-    msg["Subject"] = subjects
+    
     
     corpo_html = f"""
     <html>

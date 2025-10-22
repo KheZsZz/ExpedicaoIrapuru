@@ -63,7 +63,7 @@ def main():
 
                 if enviar:
                     # Gera e envia relatório HTML interativo
-                    enviar_relatorio_email(df_filtrado, remetente, senha, destinatario, subjects=None)
+                    enviar_relatorio_email(df_filtrado, remetente, senha, destinatario)
                     st.success("✅ Relatório enviado com sucesso!")
                     st.session_state["mostrar_form"] = False
 
