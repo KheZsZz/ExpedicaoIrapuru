@@ -58,11 +58,12 @@ def main():
                 senha = st.secrets["EMAIL_PASS"]
                 destinatario = st.secrets["EMAIL_CC"]
 
+
                 enviar = st.form_submit_button("🚀 Enviar Agora")
 
                 if enviar:
                     # Gera e envia relatório HTML interativo
-                    enviar_relatorio_email(df_filtrado, remetente, senha, destinatario)
+                    enviar_relatorio_email(df_filtrado, remetente, senha, destinatario, subjects=None)
                     st.success("✅ Relatório enviado com sucesso!")
                     st.session_state["mostrar_form"] = False
 
