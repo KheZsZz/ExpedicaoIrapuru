@@ -6,7 +6,7 @@ def conectData () :
     df["Turno"] = df["Turno"].str.replace("°", "º").str.strip()
 
     df["Data"] = df["Data"].astype(str).str.replace(r"\D", "/", regex=True)
-    df["Data"] = pd.to_datetime(df["Data"], dayfirst=True, errors="coerce")
+    df["Data"] = pd.to_datetime(df["Data"], errors="coerce", dayfirst=True)
 
     df["Quantidade de CTe"] = pd.to_numeric(df["Quantidade de CTe"], errors="coerce").astype("Int64")
 

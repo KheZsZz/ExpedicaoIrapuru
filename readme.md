@@ -1,7 +1,7 @@
 ![Irapuru Transportes](/image/1.jpg)
 
-# Gerenciamneto por setor
-O sistema tem por objetivo auxiliar o crescimento dos setores Expedição/Recebimento e auxiliar o Operacional da empresa [irapuru] (https://www.irapuru.com.br/). 
+# Gerenciamento por setor
+O sistema tem por objetivo auxiliar o crescimento dos setores Expedição/Recebimento e auxiliar o Operacional da empresa [irapuru](https://www.irapuru.com.br/). 
 
 > #### Nota:
 > Para os setores Expedição/Recebimento temos a opção de um Dashbord interativo.

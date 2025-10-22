@@ -15,7 +15,8 @@ def main():
     )   
     
     st.title("📊 Fechamento Operacional")
-
+    
+ # ============================= Filtros =======================================
     with st.sidebar:
         data_inicial, data_final = st.date_input(
             "📅 Período",
@@ -33,8 +34,7 @@ def main():
             "⚙️ Tipo de Operação",
             options=["Todos", *sorted(df["Tipo"].dropna().unique().tolist())]
         )
-
-        # Filtros
+       
         df_filtrado = df[
             (df["Data"] >= pd.to_datetime(data_inicial)) &
             (df["Data"] <= pd.to_datetime(data_final))
@@ -46,7 +46,7 @@ def main():
         if tipo_operacao != "Todos":
             df_filtrado = df_filtrado[df_filtrado["Tipo"] == tipo_operacao]
 
-        # Botão para enviar relatório ================================================
+        # Botão para enviar relatório
         if st.button("📊 Gerar e Enviar Relatório"):
             st.session_state["mostrar_form"] = True  # ativa o pop-up
             
@@ -57,13 +57,17 @@ def main():
                 remetente = st.secrets["EMAIL_USER"]
                 senha = st.secrets["EMAIL_PASS"]
                 destinatario = st.secrets["EMAIL_CC"]
-
+                ocorrencias = st.text_area("📝 Ocorrências adicionais (opcional)", "")
+                turno = st.selectbox(
+                    "⏰ Selecionar Turno",
+                    options=["1º", "2º", "3º"]
+                )
 
                 enviar = st.form_submit_button("🚀 Enviar Agora")
 
                 if enviar:
                     # Gera e envia relatório HTML interativo
-                    enviar_relatorio_email(df_filtrado, remetente, senha, destinatario)
+                    enviar_relatorio_email(df_filtrado, remetente, senha, destinatario, ocorrencias, turno)
                     st.success("✅ Relatório enviado com sucesso!")
                     st.session_state["mostrar_form"] = False
 
