@@ -46,7 +46,7 @@ def main():
         if tipo_operacao != "Todos":
             df_filtrado = df_filtrado[df_filtrado["Tipo"] == tipo_operacao]
 
-        # Botão para enviar relatório
+        # Botão para enviar relatório ================================================
         if st.button("📊 Gerar e Enviar Relatório"):
             st.session_state["mostrar_form"] = True  # ativa o pop-up
             
