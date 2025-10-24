@@ -8,10 +8,10 @@ from email.mime.image import MIMEImage
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import pandas as pd
-from database import conectData
+from database import conectData, ocorrenciasRecebimento
 
 df_CTe = conectData()
-
+df_ocorrencias = ocorrenciasRecebimento()
 
 # -----------------------------
 # 1️⃣ Função para gerar gráficos
@@ -126,6 +126,10 @@ def enviar_relatorio_email(df, remetente, senha, destinatario, ocorrencias, turn
             (df_CTe["Turno"] == turno) & 
             (df_CTe["Data"] == datetime.now().strftime("%Y/%m/%d"))
         ]
+        
+        df_filtrado_ocorrencias = df_ocorrencias[
+            (df_ocorrencias["Data da ocorrência"] == datetime.now().strftime("%d/%m/%Y"))
+        ]
 
         # Agrupar por responsável e somar a quantidade de CTe
         cte = df_filtrado.groupby("Responsável", as_index=False).agg({"Quantidade de CTe": "sum"})
@@ -134,7 +138,44 @@ def enviar_relatorio_email(df, remetente, senha, destinatario, ocorrencias, turn
             cte_html = cte.to_html(index=False, border=0, justify="center", classes="tabela-relatorio")
         else:
             cte_html = "<p><i>⚠️ Nenhum CTe registrado para o turno 3º na data selecionada.</i></p>"
-                
+        
+        if not df_filtrado_ocorrencias.empty:
+            # Identifica o nome da última coluna (link)
+            ultima_coluna = df_filtrado_ocorrencias.columns[-1]
+
+            # Cria cópia para não afetar o original
+            df_links = df_filtrado_ocorrencias.copy()
+
+            # Converte links em HTML clicável com texto "Abrir Anexo 📎"
+            df_links[ultima_coluna] = df_links[ultima_coluna].apply(
+                lambda x: f'<a href="{x}" target="_blank">Abrir Anexo 📎</a>'
+                if isinstance(x, str) and x.startswith("http")
+                else x
+            )
+
+            # Seleciona colunas específicas na ordem desejada
+            colunas_desejadas = [
+                "Data da ocorrência",
+                "Placa do veículo",
+                "Setor responsável",
+                "Descritivo do ocorrido",
+                ultima_coluna,  # Evidências (última coluna com link)
+            ]
+            df_links = df_links[colunas_desejadas]
+
+            # Gera HTML com links clicáveis
+            ocorrencias_html = df_links.to_html(
+                index=False,
+                border=0,
+                justify="center",
+                classes="tabela-relatorio",
+                escape=False  # Permite HTML nos links
+            )
+        else:
+            ocorrencias_html = "<p><i>⚠️ Nenhuma ocorrência registrada para a data selecionada.</i></p>"
+
+        
+          
         def formatar_tempo(total_minutos):
             horas = int(total_minutos // 60)
             minutos = int(total_minutos % 60)
@@ -212,6 +253,9 @@ def enviar_relatorio_email(df, remetente, senha, destinatario, ocorrencias, turn
             ocorrencias = ocorrencias.replace("\n", "<br>")
             corpo_html += f"""
             <h3>⚠️ Ocorrências</h3>
+            {ocorrencias_html}
+            
+            <h3>📌 Observações</h3>
             <p>{ocorrencias}</p>
             """
         

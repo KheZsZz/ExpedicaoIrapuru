@@ -68,3 +68,9 @@ def fechamento():
     
     return df
 
+def ocorrenciasRecebimento():
+    df = pd.read_csv(
+        "https://docs.google.com/spreadsheets/d/1588Wscg2jZBDM6kQKsfjEeLeA8p3cU2qkpmHqhbw4mk/export?format=csv&gid=514085568",
+        header=0
+    )
+    return df
