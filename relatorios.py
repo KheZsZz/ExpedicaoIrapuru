@@ -261,11 +261,9 @@ def enviar_relatorio_email(df, remetente, senha, destinatario, ocorrencias, turn
         
         corpo_html += """
                 <br>
-                <br>
                 <p>Atenciosamente,</p>
                 <br>
-                <p>IRAPURU TRANSPORTES LTDA</p>
-                <p>Sistema automatizado.</p>
+                <img src="https://drive.google.com/file/d/1FHcW4Ofm6My7ch8taQdYAeQcIruryhFH" alt="Assinatura" width="150"'/>
             </body>
         </html>"""
 
