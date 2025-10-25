@@ -258,14 +258,16 @@ def enviar_relatorio_email(df, remetente, senha, destinatario, ocorrencias, turn
             <h3>📌 Observações</h3>
             <p>{ocorrencias}</p>
             """
-        
         corpo_html += """
                 <br>
                 <p>Atenciosamente,</p>
                 <br>
-                <img src="https://drive.google.com/file/d/1FHcW4Ofm6My7ch8taQdYAeQcIruryhFH" alt="Assinatura" width="150"'/>
+                <img src="https://drive.google.com/uc?export=view&id=1FHcW4Ofm6My7ch8taQdYAeQcIruryhFH"
+                    alt="Assinatura"
+                    width="150"/>
             </body>
-        </html>"""
+            </html>"""
+
 
     # ===== Montagem da mensagem =====
     msg = MIMEMultipart()
