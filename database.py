@@ -56,7 +56,7 @@ def fechamento():
     df = pd.read_csv(
         "https://docs.google.com/spreadsheets/d/1EScFjmlwCXi212yQVz6b7sj-d7XniwlkR1lldTAQkRk/export?format=csv&gid=0",
         header=1 )
-    df = df.dropna(subset=["Data"])
+    df = df.dropna(subset=["Placa"])
     df = df.astype(str)
     
     df["Data"] = pd.to_datetime(df["Data"], errors="coerce", dayfirst=True)
