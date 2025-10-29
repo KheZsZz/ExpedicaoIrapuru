@@ -1,5 +1,6 @@
 # relatorios.py
 import io
+import os
 import smtplib
 from datetime import datetime
 from email.mime.multipart import MIMEMultipart
@@ -258,31 +259,40 @@ def enviar_relatorio_email(df, remetente, senha, destinatario, ocorrencias, turn
             <h3>📌 Observações</h3>
             <p>{ocorrencias}</p>
             """
+            
         corpo_html += """
                 <br>
                 <p>Atenciosamente,</p>
                 <br>
-                <img src="https://drive.google.com/uc?export=view&id=1FHcW4Ofm6My7ch8taQdYAeQcIruryhFH"
-                    alt="Assinatura"
-                    width="150"/>
+                <img src="cid:assinatura" alt="Assinatura" width="450"/>
             </body>
             </html>"""
 
 
     # ===== Montagem da mensagem =====
     msg = MIMEMultipart()
-    msg["Subject"] = f"📊 Fechamento - {data_hoje}"
+    msg["Subject"] = f"📊 Fechamento"
     msg["From"] = remetente
     msg["To"] = destinatario
     msg.attach(MIMEText(corpo_html, "html"))
 
-    # ===== Anexar imagens (se houver) =====
+    # ===== Anexar imagens dos gráficos =====
     for i, img_buf in enumerate(imagens):
         img_buf.seek(0)
         img = MIMEImage(img_buf.read())
         img.add_header("Content-ID", f"<grafico{i+1}>")
         msg.attach(img)
 
+    # ===== Anexar assinatura =====
+    try:
+        caminho_assinatura = os.path.join(os.getcwd(), "assinatura.png")
+        with open(caminho_assinatura, "rb") as f:
+            assinatura_img = MIMEImage(f.read())
+            assinatura_img.add_header("Content-ID", "<assinatura>")
+            msg.attach(assinatura_img)
+    except Exception as e:
+        print(f"⚠️ Erro ao anexar imagem de assinatura: {e}")
+    
     # ===== Envio =====
     try:
         with smtplib.SMTP("smtp.gmail.com", 587) as smtp:
