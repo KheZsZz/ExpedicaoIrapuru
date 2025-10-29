@@ -83,7 +83,7 @@ def main():
     
     abastecimentos = df_filtrado[df_filtrado['Tipo'] == "Abastecimento"]
     col2.metric(
-        label="💰 Abastecimento",
+        label="⛽ Abastecimento",
         value=f"{abastecimentos.shape[0]:,.0f}",
         delta=f"{(abastecimentos.shape[0] / df_filtrado.shape[0] * 100):.1f}%" if df_filtrado.shape[0] > 0 else "0%"
     )
