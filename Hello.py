@@ -1,11 +1,12 @@
 import streamlit as st
 import pandas as pd
-from database import fechamento
+from database import fechamento, conectData
 from relatorios import enviar_relatorio_email
 
 import plotly.express as px
 
 df = fechamento()
+df_cte = conectData()
 
 def main(): 
     st.set_page_config(
@@ -60,7 +61,8 @@ def main():
                 ocorrencias = st.text_area("📝 Ocorrências adicionais (opcional)", "")
                 turno = st.selectbox(
                     "⏰ Selecionar Turno",
-                    options=["1º", "2º", "3º"]
+                    options=["Todos os turnos", *sorted(df_cte["Turno"].dropna().unique())],
+                    key="turnos"
                 )
 
                 enviar = st.form_submit_button("🚀 Enviar Agora")
@@ -73,7 +75,7 @@ def main():
 
     # ==================== Cabeçalho ====================
     col1, col2, col3 = st.columns(3)
-    
+    # st.dataframe(df_cte, use_container_width=True)
     lancamentos = df_filtrado[df_filtrado['Tipo'] == "Lançamento"]
     col1.metric(
         label="📦 Total de Operações",

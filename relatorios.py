@@ -123,7 +123,7 @@ def enviar_relatorio_email(df, remetente, senha, destinatario, ocorrencias, turn
         colaboradores = ", ".join(sorted(df["Colaborador"].dropna().unique()))
         
         # Filtrar turno e data
-        df_filtrado = df_CTe[
+        df_filtrado_cte = df_CTe[
             (df_CTe["Turno"] == turno) & 
             (df_CTe["Data"] == datetime.now().strftime("%Y/%m/%d"))
         ]
@@ -133,12 +133,12 @@ def enviar_relatorio_email(df, remetente, senha, destinatario, ocorrencias, turn
         ]
 
         # Agrupar por responsável e somar a quantidade de CTe
-        cte = df_filtrado.groupby("Responsável", as_index=False).agg({"Quantidade de CTe": "sum"})
+        cte = df_filtrado_cte.groupby("Responsável", as_index=False).agg({"Quantidade de CTe": "sum"})
 
         if not cte.empty:
             cte_html = cte.to_html(index=False, border=0, justify="center", classes="tabela-relatorio")
         else:
-            cte_html = "<p><i>⚠️ Nenhum CTe registrado para o turno 3º na data selecionada.</i></p>"
+            cte_html = f"<p><i>⚠️ Nenhum CTe registrado para o {turno} turno na data selecionada.</i></p>"
         
         if not df_filtrado_ocorrencias.empty:
             # Identifica o nome da última coluna (link)
@@ -264,7 +264,7 @@ def enviar_relatorio_email(df, remetente, senha, destinatario, ocorrencias, turn
                 <br>
                 <p>Atenciosamente,</p>
                 <br>
-                <img src="cid:assinatura" alt="Assinatura" width="450"/>
+                <img src="cid:assinatura" alt="Assinatura" width="620"/>
             </body>
             </html>"""
 
