@@ -40,7 +40,12 @@ def main():
             (df["Data"] >= pd.to_datetime(data_inicial)) &
             (df["Data"] <= pd.to_datetime(data_final))
         ]
+        df_filtrado_cte = df_cte[
+            (df_cte["Data"] >= pd.to_datetime(data_inicial)) &
+            (df_cte["Data"] <= pd.to_datetime(data_final))
+        ]
          
+        
         if colaborador != "Todos":
             df_filtrado = df_filtrado[df_filtrado["Colaborador"] == colaborador]
 
@@ -69,7 +74,7 @@ def main():
 
                 if enviar:
                     # Gera e envia relatório HTML interativo
-                    enviar_relatorio_email(df_filtrado, remetente, senha, destinatario, ocorrencias, turno)
+                    enviar_relatorio_email(df_filtrado, remetente, senha, destinatario, ocorrencias, turno, df_filtrado_cte)
                     st.success("✅ Relatório enviado com sucesso!")
                     st.session_state["mostrar_form"] = False
 

@@ -97,7 +97,7 @@ def gerar_graficos(df):
 # -----------------------------
 # 2️⃣ Função para enviar e-mail
 # -----------------------------
-def enviar_relatorio_email(df, remetente, senha, destinatario, ocorrencias, turno):
+def enviar_relatorio_email(df, remetente, senha, destinatario, ocorrencias, turno, ctes):
     data_hoje = datetime.now().strftime("%d/%m/%Y")
     
 
@@ -106,7 +106,7 @@ def enviar_relatorio_email(df, remetente, senha, destinatario, ocorrencias, turn
         corpo_html = f"""
         <html>
         <body style="font-family: Arial; color: #333;">
-            <h2>📅 Relatório Diário - {data_hoje}</h2>
+            <h2>📅 Relatório Diário</h2>
             <p>⚠️ Nenhum dado disponível para gerar o relatório de hoje.</p>
         </body>
         </html>
@@ -123,10 +123,10 @@ def enviar_relatorio_email(df, remetente, senha, destinatario, ocorrencias, turn
         colaboradores = ", ".join(sorted(df["Colaborador"].dropna().unique()))
         
         # Filtrar turno e data
-        df_filtrado_cte = df_CTe[
-            (df_CTe["Turno"] == turno) & 
-            (df_CTe["Data"] == datetime.now().strftime("%Y/%m/%d"))
-        ]
+        if "Todos os turnos" in turno: 
+            df_filtrado_cte = ctes 
+        else: 
+            df_filtrado_cte = ctes[ctes["Turno"] == turno]
         
         df_filtrado_ocorrencias = df_ocorrencias[
             (df_ocorrencias["Data da ocorrência"] == datetime.now().strftime("%d/%m/%Y"))
@@ -224,7 +224,7 @@ def enviar_relatorio_email(df, remetente, senha, destinatario, ocorrencias, turn
             </style>
         </head>
         <body>
-            <h2>📅 Relatório Diário - {data_hoje}</h2>
+            <h2>📅 Relatório Diário</h2>
             <p>Resumo das operações:</p>
             <ul>
                 <li><b>Total de registros:</b> {total_registros}</li>
