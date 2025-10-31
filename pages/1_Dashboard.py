@@ -9,9 +9,6 @@ df = conectData()
 df_ocorrencias = ocorrencias()
 df_desacordos = desacordos()
 
-df["Data"] = pd.to_datetime(df["Data"], errors="coerce")
-df_ocorrencias["Data"] = pd.to_datetime(df_ocorrencias["Data"], errors="coerce")
-df_desacordos["Data"] = pd.to_datetime(df_desacordos["Data"], errors="coerce")
 
 def dashboard():
     st.title("📊 Dashboard")
@@ -106,9 +103,23 @@ def dashboard():
                     .nlargest(3)
                     .reset_index()
                     .sort_values("Quantidade de CTe", ascending=False),
-                    hide_index=True
+                    
+                    hide_index=True,
+                    column_config={
+                        "Data": st.column_config.DateColumn(
+                            "Data",
+                            format="DD/MM/YYYY"
+                        ), 
+                        "Quantidade de CTe": st.column_config.NumberColumn(
+                            "Quantidade",
+                            width="small",  
+                            format="localized",
+                            
+                            # format="0"     
+                        )
+                            
+                    }
                 )
-
             # Gráfico CTe por Responsável
             resumo = df_filtrado.groupby("Responsável")["Quantidade de CTe"].sum().reset_index()
             resumo = resumo.sort_values("Quantidade de CTe", ascending=False)
@@ -130,7 +141,12 @@ def dashboard():
             col1.metric("Total de Erros", len(df_filtrado_ocorrencias))
             col2.metric(
                 "Erros Resolvidos",
-                df_filtrado_ocorrencias[df_filtrado_ocorrencias["Status"].str.lower().str.contains("resolvido")].shape[0]
+                df_filtrado_ocorrencias[
+                    df_filtrado_ocorrencias["Status"]
+                        .astype(str)
+                        .str.lower()
+                        .str.contains("resolvido", na=False)
+                ].shape[0]  
             )
 
             coluna_cliente = "Cliente (CNPJ)" if "Cliente (CNPJ)" in df_filtrado_ocorrencias.columns else "Cliente"
@@ -153,7 +169,17 @@ def dashboard():
                 st.plotly_chart(fig_evolucao, use_container_width=True)
 
             st.markdown("### 🔢 Registros Filtrados")
-            st.dataframe(df_filtrado_ocorrencias, use_container_width=True, hide_index=True)
+            st.dataframe(
+                df_filtrado_ocorrencias, 
+                column_config={
+                    "Data": st.column_config.DateColumn(
+                        "Data", 
+                        format="DD/MM/YYYY"
+                    ),
+                },
+                width='stretch', 
+                hide_index=True
+            )
 
             # st.dataframe(df_ocorrencias)
 
@@ -202,47 +228,39 @@ def desacordos():
 
         status_sel = st.selectbox(
             "Status",
-            ["Todos"] + sorted(df_desacordos["Status"].dropna().unique()),
+            ["Todos"] + sorted(df_desacordos["Pendências"].dropna().unique()),
             key="status"
         )
+        # --- Filtragem de período ---
+        if isinstance(data, (list, tuple)):
+            data_inicio, data_fim = pd.to_datetime(data[0]), pd.to_datetime(data[1])
+        else:
+            data_inicio, data_fim = pd.to_datetime(data), pd.to_datetime(data)
 
-    # --- Filtragem de período ---
-    if isinstance(data, (list, tuple)):
-        data_inicio, data_fim = pd.to_datetime(data[0]), pd.to_datetime(data[1])
-    else:
-        data_inicio, data_fim = pd.to_datetime(data), pd.to_datetime(data)
-
-    df_desacordos_filtrado = df_desacordos[
-        (df_desacordos["Data"] >= data_inicio) &
-        (df_desacordos["Data"] <= data_fim)
-    ]
-
-    # --- Aplicar filtros extras ---
-    if colaborador_default != "Todos":
-        df_desacordos_filtrado = df_desacordos_filtrado[
-            df_desacordos_filtrado["Descontar"] == colaborador_default
-        ]
-    if erro_sel != "Todos":
-        df_desacordos_filtrado = df_desacordos_filtrado[
-            df_desacordos_filtrado["MOTIVO DA SUBSTITUIÇÃO"] == erro_sel
+        df_desacordos_filtrado = df_desacordos[
+            (df_desacordos["Data"] >= data_inicio) &
+            (df_desacordos["Data"] <= data_fim)
         ]
 
-    if setor_sel != "Todos":
-        df_desacordos_filtrado = df_desacordos_filtrado[
-            df_desacordos_filtrado["Setor Responsavel"] == setor_sel
-        ]
-
-    if status_sel != "Todos":
-        df_desacordos_filtrado = df_desacordos_filtrado[
-            df_desacordos_filtrado["Status"] == status_sel
-        ]
-
+        # --- Aplicar filtros extras ---
+        if erro_sel != "Todos":
+            df_desacordos_filtrado = df_desacordos_filtrado[
+                df_desacordos_filtrado["MOTIVO DA SUBSTITUIÇÃO"] == erro_sel
+            ]
+        if setor_sel != "Todos":
+            df_desacordos_filtrado = df_desacordos_filtrado[
+                df_desacordos_filtrado["Setor Responsavel"] == setor_sel
+            ]
+        if status_sel != "Todos":
+            df_desacordos_filtrado = df_desacordos_filtrado[
+                df_desacordos_filtrado["Pendências"] == status_sel
+            ]
     # --- Dashboard ---
     if not df_desacordos_filtrado.empty:
         col1, col2, col3 = st.columns(3)
         col1.metric("Total de Erros", len(df_desacordos_filtrado))
         col2.metric("Finalizados", df_desacordos_filtrado[
-            df_desacordos_filtrado["Status"].str.contains("Finalizado", case=False, na=False)
+            df_desacordos_filtrado["Pendências"].str.contains("Finalizado", case=False, na=False)
         ].shape[0])
         col3.metric("Clientes Afetados", df_desacordos_filtrado["Cliente"].nunique())
 
@@ -294,7 +312,18 @@ def desacordos():
                 st.plotly_chart(fig_expedidor, use_container_width=True)
 
         st.markdown("### 📋 Registros Filtrados")
-        st.dataframe(df_desacordos_filtrado, use_container_width=True, hide_index=True)
+        
+        st.dataframe(
+            df_desacordos_filtrado, 
+            column_config={
+                "Data": st.column_config.DateColumn(
+                    "Data", 
+                    format="DD/MM/YYYY"
+                ),
+            },
+            width='stretch',
+            hide_index=True
+        )
 
     else:
         st.info("Nenhuma ocorrência encontrada para os filtros aplicados.")
