@@ -106,7 +106,7 @@ def enviar_relatorio_email(df, remetente, senha, destinatario, ocorrencias, turn
         corpo_html = f"""
         <html>
         <body style="font-family: Arial; color: #333;">
-            <h2>📅 Relatório Diário</h2>
+            <h2>📅 Relatório Diário - {data_hoje}</h2>
             <p>⚠️ Nenhum dado disponível para gerar o relatório de hoje.</p>
         </body>
         </html>
@@ -118,9 +118,13 @@ def enviar_relatorio_email(df, remetente, senha, destinatario, ocorrencias, turn
         total_lancamentos = (df["Tipo"].str.lower() == "lançamento").sum()
         total_baixas = (df["Tipo"].str.lower() == "baixa").sum()
         total_abastecimentos = (df["Tipo"].str.lower() == "abastecimento").sum()
+        total_lancamentos_externoSP = df[
+            (df["Tipo"].str.lower() == "lançamento") &
+            (df["Destino"] != "Itapecerica da Serra")
+        ].shape[0]
         
-        total_colaboradores = df["Colaborador"].nunique()
-        colaboradores = ", ".join(sorted(df["Colaborador"].dropna().unique()))
+        # total_colaboradores = df["Colaborador"].nunique()
+        # colaboradores = ", ".join(sorted(df["Colaborador"].dropna().unique()))
         
         # Filtrar turno e data
         if "Todos os turnos" in turno: 
@@ -224,14 +228,14 @@ def enviar_relatorio_email(df, remetente, senha, destinatario, ocorrencias, turn
             </style>
         </head>
         <body>
-            <h2>📅 Relatório Diário</h2>
+            <h2>📅 Relatório Diário - {data_hoje}</h2>
             <p>Resumo das operações:</p>
             <ul>
                 <li><b>Total de registros:</b> {total_registros}</li>
-                <li><b>Lançamentos:</b> {total_lancamentos}</li>
+                <li><b>Lançamentos SP:</b> {total_lancamentos}</li>
                 <li><b>Baixas:</b> {total_baixas}</li>
                 <li><b>Abastecimentos:</b> {total_abastecimentos}</li>
-                <li><b>Colaboradores ativos ({total_colaboradores}):</b> {colaboradores}</li>
+                <li><b>Viagens:</b> {total_lancamentos_externoSP}</li>
             </ul>
             
             <h3> Quandidade de CT-e digitados </h3>

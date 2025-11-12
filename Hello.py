@@ -74,7 +74,17 @@ def main():
 
                 if enviar:
                     # Gera e envia relatório HTML interativo
+                    if not df_cte.empty and turno in df_cte["Turno"].values:
+                        colab = df_cte[df_cte["Turno"] == turno]["Responsável"].unique()
+                    else:
+                        colab = []
+
+                    df_filtrado = df_filtrado[df_filtrado["Colaborador"].isin(colab)].reset_index(drop=True)
+
                     enviar_relatorio_email(df_filtrado, remetente, senha, destinatario, ocorrencias, turno, df_filtrado_cte)
+                    # st.dataframe(colab, use_container_width=True)
+                    st.dataframe(df_filtrado_cte, use_container_width=True)
+                    
                     st.success("✅ Relatório enviado com sucesso!")
                     st.session_state["mostrar_form"] = False
 
