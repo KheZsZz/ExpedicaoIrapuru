@@ -83,7 +83,7 @@ def main():
 
                     enviar_relatorio_email(df_filtrado, remetente, senha, destinatario, ocorrencias, turno, df_filtrado_cte)
                     # st.dataframe(colab, use_container_width=True)
-                    st.dataframe(df_filtrado_cte, use_container_width=True)
+                    # st.dataframe(df_filtrado_cte, use_container_width=True)
                     
                     st.success("✅ Relatório enviado com sucesso!")
                     st.session_state["mostrar_form"] = False

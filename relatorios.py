@@ -228,7 +228,7 @@ def enviar_relatorio_email(df, remetente, senha, destinatario, ocorrencias, turn
             </style>
         </head>
         <body>
-            <h2>📅 Relatório Diário - {data_hoje}</h2>
+            <h2>📅 Relatório Diário - { data_hoje }</h2>
             <p>Resumo das operações:</p>
             <ul>
                 <li><b>Total de registros:</b> {total_registros}</li>
